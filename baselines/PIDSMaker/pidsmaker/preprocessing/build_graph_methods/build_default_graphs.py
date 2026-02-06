@@ -246,9 +246,9 @@ class LazyNodeLoader:
         file_lf = scan_table(self.data_dir, "file_node_table")
         subject_lf = scan_table(self.data_dir, "process_node_table")
 
-        self.netflow_cols = netflow_lf.collect_schema().names() if netflow_lf else []
-        self.file_cols = file_lf.collect_schema().names() if file_lf else []
-        self.subject_cols = subject_lf.collect_schema().names() if subject_lf else []
+        self.netflow_cols = netflow_lf.collect_schema().names() if netflow_lf is not None else []
+        self.file_cols = file_lf.collect_schema().names() if file_lf is not None else []
+        self.subject_cols = subject_lf.collect_schema().names() if subject_lf is not None else []
 
         # Cache for loaded nodes
         self._cache = {}

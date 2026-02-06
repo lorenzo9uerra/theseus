@@ -1,0 +1,8 @@
+featurization:
+  feat_training:
+    emb_dim: 64
+
+detection:
+  gnn_training:
+    lr: 0.001
+    node_out_dim: 256

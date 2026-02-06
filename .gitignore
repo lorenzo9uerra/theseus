@@ -1,0 +1,20 @@
+**/__pycache__/
+.venv/
+.vscode/
+/data
+wandb/
+data/*/
+cache/
+checkpoints/
+slurm/
+docs/
+outputs/
+
+# Baseline specific
+/baselines/MAGIC/data/*/
+!/baselines/MAGIC/data/configs/
+!/baselines/MAGIC/data/configs/**
+/baselines/MAGIC/results/
+/baselines/MAGIC/eval_result/
+/baselines/PIDSMaker/data
+/baselines/PIDSMaker/ground_truth

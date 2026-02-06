@@ -67,6 +67,12 @@ theseus/
 
 ## Reproducing Paper Results
 
+### Erratum: Table 2
+
+Due to a parsing error in the aggregation script, the False Positive Rate (FPR) reported in **Table 2** for the **Velox** baseline on the **CADETS** dataset was incorrect. The corrected value is:
+
+* **Velox on CADETS:** 0.0031 ± 0.0028
+
 ### 1. Evaluation
 
 To reproduce the precise results reported in the paper, use the provided script. This script **does not perform training**; it loads the pre-built graph cache and evaluates the provided checkpoints to generate the metrics.

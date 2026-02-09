@@ -132,7 +132,7 @@ train-all-seeds: verify-env data
 			cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $$ds --seed $$seed --device $(DEVICE) $(WANDB_FLAG) \
 				> "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" 2>&1 \
 			&& mv "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/$${ds}_seed$${seed}.log" \
-			|| (rm -f "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" && exit 1); \
+		|| { rm -f "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp"; exit 1; }; \
 			tail -20 "$(RESULT_DIR)/$${ds}_seed$${seed}.log"; \
 		done; \
 	done

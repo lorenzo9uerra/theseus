@@ -108,7 +108,7 @@ orthrus: verify-env verify-links
 				--tags orthrus,reproduction \
 				> "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" 2>&1 \
 			&& mv "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log" \
-			|| (rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" && echo "  FAILED - see previous log" && continue); \
+			|| { rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
 			echo "  Done. Log: $(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
 			tail -5 "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
 		done; \
@@ -131,7 +131,7 @@ eval-orthrus: verify-env verify-links
 				--tags orthrus,reproduction \
 				> "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" 2>&1 \
 			&& mv "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log" \
-			|| (rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" && echo "  FAILED - see previous log" && continue); \
+			|| { rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
 			tail -5 "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
 		done; \
 	done
@@ -155,7 +155,7 @@ velox: verify-env verify-links
 				--tags velox,reproduction \
 				> "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" 2>&1 \
 			&& mv "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log" \
-			|| (rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" && echo "  FAILED - see previous log" && continue); \
+			|| { rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
 			echo "  Done. Log: $(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
 			tail -5 "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
 		done; \
@@ -178,7 +178,7 @@ eval-velox: verify-env verify-links
 				--tags velox,reproduction \
 				> "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" 2>&1 \
 			&& mv "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log" \
-			|| (rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" && echo "  FAILED - see previous log" && continue); \
+			|| { rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
 			tail -5 "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
 		done; \
 	done

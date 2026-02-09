@@ -130,7 +130,9 @@ train-all-seeds: verify-env data
 			echo ""; \
 			echo "=== Evaluating $$ds seed=$$seed ==="; \
 			cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $$ds --seed $$seed --device $(DEVICE) $(WANDB_FLAG) \
-				> "$(RESULT_DIR)/$${ds}_seed$${seed}.log" 2>&1 || exit 1; \
+				> "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" 2>&1 \
+			&& mv "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/$${ds}_seed$${seed}.log" \
+			|| (rm -f "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" && exit 1); \
 			tail -20 "$(RESULT_DIR)/$${ds}_seed$${seed}.log"; \
 		done; \
 	done
@@ -146,7 +148,8 @@ $(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$
 	@mkdir -p $(RESULT_DIR)
 	@echo "=== Evaluating $(1) seed=$(2) ==="
 	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \
-		> "$(RESULT_DIR)/$(1)_seed$(2).log" 2>&1
+		> "$(RESULT_DIR)/$(1)_seed$(2).log.tmp" 2>&1 \
+		&& mv "$(RESULT_DIR)/$(1)_seed$(2).log.tmp" "$(RESULT_DIR)/$(1)_seed$(2).log"
 	@tail -20 "$(RESULT_DIR)/$(1)_seed$(2).log"
 endef
 

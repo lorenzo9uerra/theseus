@@ -130,8 +130,8 @@ uv run main.py CADETS_E3 --config configs/examples/custom_theseus_example.yml
 
 Reproduction instructions for the baseline systems are provided in their respective directories:
 
-* **Magic:** See [baselines/MAGIC/README.md](baselines/MAGIC/README.md)
-* **Orthrus and Velox:** See [baselines/PIDSMaker/README.md](baselines/PIDSMaker/README.md)
+* **Magic:** See [baselines/MAGIC/README.md](baselines/MAGIC/)
+* **Orthrus and Velox:** See [baselines/PIDSMaker/README.md](baselines/PIDSMaker/)
 
 Both baselines use conda for dependency management and include Makefiles for one-command reproducibility.
 

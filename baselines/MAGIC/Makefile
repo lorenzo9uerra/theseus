@@ -2,7 +2,7 @@
 # MAGIC - Reproducible Artifact Pipeline
 # ============================================================
 # Usage:
-#   make setup           Install conda environment
+#   make setup           Install uv environment
 #   make data            Parse raw DARPA TC E3 -> DGL graphs
 #   make train           Train all datasets (all seeds, no eval)
 #   make eval            Evaluate all datasets (all seeds)
@@ -27,7 +27,6 @@ GROUND_TRUTH_DIR ?= $(PROJECT_ROOT)/ground_truth/reapr-ground-truth/darpa-tc-eng
 DATASETS := cadets fivedirections theia trace
 SEEDS    := 71 83 232 441 915
 DEVICE   ?= -1
-CONDA_ENV := MAGIC
 WANDB    ?=
 
 # Build --wandb flag when WANDB is set (e.g. make train WANDB=1)
@@ -46,7 +45,7 @@ all: data train-all-seeds
 help:
 	@echo "MAGIC"
 	@echo "========================="
-	@echo "  make setup    - Create conda environment"
+	@echo "  make setup    - Create uv environment"
 	@echo "  make data     - Parse DARPA TC E3 datasets into DGL graphs"
 	@echo "  make train    - Train all datasets / seeds (no evaluation)"
 	@echo "  make eval     - Evaluate trained models"
@@ -62,15 +61,14 @@ help:
 
 # ---------- Environment ----------
 
-setup: $(MAGIC_ROOT)/environment.yml
-	@echo "=== Setting up conda environment '$(CONDA_ENV)' ==="
-	conda env create -f $(MAGIC_ROOT)/environment.yml --name $(CONDA_ENV) || \
-		conda env update -f $(MAGIC_ROOT)/environment.yml --name $(CONDA_ENV)
-	@echo "=== Environment ready. Activate with: conda activate $(CONDA_ENV) ==="
+setup:
+	@echo "=== Setting up uv environment ==="
+	cd $(MAGIC_ROOT) && uv sync
+	@echo "=== Environment ready. Use 'uv run' or 'source .venv/bin/activate' ==="
 
 verify-env:
-	@python -c "import torch; import dgl; import polars; print('Environment OK: torch=' + torch.__version__ + ', dgl=' + dgl.__version__)" \
-		|| (echo "ERROR: Required packages not found. Run 'make setup' and activate the environment." && exit 1)
+	@cd $(MAGIC_ROOT) && uv run python -c "import torch; import dgl; import polars; print('Environment OK: torch=' + torch.__version__ + ', dgl=' + dgl.__version__)" \
+		|| (echo "ERROR: Required packages not found. Run 'make setup'." && exit 1)
 
 # ---------- Data Preparation ----------
 
@@ -95,7 +93,7 @@ $(MAGIC_ROOT)/data/$(1)/metadata.json:
 	@echo "=== Parsing $(1) ==="
 	@test -d "$(DATA_DIR)/$($(1)_RAW)" || (echo "ERROR: $(DATA_DIR)/$($(1)_RAW) not found" && exit 1)
 	@test -f "$(GROUND_TRUTH_DIR)/$($(1)_GT)" || (echo "ERROR: $(GROUND_TRUTH_DIR)/$($(1)_GT) not found" && exit 1)
-	python $(MAGIC_ROOT)/utils/data_parser_daily.py \
+	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/utils/data_parser_daily.py \
 		--dataset $(1) \
 		--data_dir "$(DATA_DIR)/$($(1)_RAW)" \
 		--ground_truth "$(GROUND_TRUTH_DIR)/$($(1)_GT)" \
@@ -112,7 +110,7 @@ $(foreach ds,$(DATASETS),$(eval $(call parse_dataset_rule,$(ds))))
 define train_rule
 $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt: $(MAGIC_ROOT)/data/$(1)/metadata.json
 	@echo "=== Training $(1) seed=$(2) device=$(DEVICE) ==="
-	python $(MAGIC_ROOT)/train.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG)
+	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/train.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG)
 endef
 
 $(foreach ds,$(DATASETS),$(foreach s,$(SEEDS),$(eval $(call train_rule,$(ds),$(s)))))
@@ -128,10 +126,10 @@ train-all-seeds: verify-env data
 		for seed in $(SEEDS); do \
 			echo ""; \
 			echo "=== Training $$ds seed=$$seed device=$(DEVICE) ==="; \
-			python $(MAGIC_ROOT)/train.py --dataset $$ds --seed $$seed --device $(DEVICE) $(WANDB_FLAG) || exit 1; \
+			cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/train.py --dataset $$ds --seed $$seed --device $(DEVICE) $(WANDB_FLAG) || exit 1; \
 			echo ""; \
 			echo "=== Evaluating $$ds seed=$$seed ==="; \
-			python $(MAGIC_ROOT)/eval.py --dataset $$ds --seed $$seed --device $(DEVICE) $(WANDB_FLAG) \
+			cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $$ds --seed $$seed --device $(DEVICE) $(WANDB_FLAG) \
 				> "$(RESULT_DIR)/$${ds}_seed$${seed}.log" 2>&1 || exit 1; \
 			tail -20 "$(RESULT_DIR)/$${ds}_seed$${seed}.log"; \
 		done; \
@@ -147,7 +145,7 @@ define eval_rule
 $(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt
 	@mkdir -p $(RESULT_DIR)
 	@echo "=== Evaluating $(1) seed=$(2) ==="
-	python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \
+	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \
 		> "$(RESULT_DIR)/$(1)_seed$(2).log" 2>&1
 	@tail -20 "$(RESULT_DIR)/$(1)_seed$(2).log"
 endef

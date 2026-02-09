@@ -18,7 +18,7 @@
 
 | Requirement | Version |
 |---|---|
-| Conda (Miniconda / Mamba) | any recent |
+| [uv](https://docs.astral.sh/uv/) | any recent |
 | CUDA (optional, for GPU) | 11.7+ |
 
 ## Directory Layout
@@ -33,7 +33,8 @@ PROJECT_ROOT/
 ├── ground_truth/                      # REAPR ground-truth labels
 └── baselines/PIDSMaker/              # <- you are here
     ├── Makefile                       # One-command reproducibility
-    ├── environment.yaml
+    ├── pyproject.toml                 # uv project definition + package metadata
+    ├── .python-version                # Pins Python 3.9
     ├── ground_truth -> ../../ground_truth  # Symlink (must exist)
     ├── artifacts/                     # Generated: pipeline intermediate files
     └── results/paper/                 # Generated: evaluation logs
@@ -44,7 +45,6 @@ PROJECT_ROOT/
 ```bash
 # 1. Install (one-time)
 make setup
-conda activate PIDSMaker
 
 # 2. Create symlinks (if not already present)
 ln -sf ../../data data
@@ -60,14 +60,11 @@ make all
 
 ```bash
 make setup
-conda activate PIDSMaker
 ```
 
 Or manually:
 ```bash
-conda env create -f environment.yaml
-conda activate PIDSMaker
-pip install -e .
+uv sync
 ```
 
 ### 2. Symlinks
@@ -103,7 +100,7 @@ make eval-velox
 **Single run:**
 ```bash
 export PYTHONHASHSEED=0
-python pidsmaker/main.py orthrus CADETS_E3 --tuned --restart_from_scratch \
+uv run python pidsmaker/main.py orthrus CADETS_E3 --tuned --restart_from_scratch \
     --detection.gnn_training.seed 111  --csv_base_dir ../../data/DARPA
 ```
 
@@ -137,7 +134,7 @@ make orthrus DATASETS="CADETS_E3" SEEDS="111 333" DEVICE=0 WANDB=1
 
 On HPC clusters, if you encounter `CXXABI` errors:
 ```bash
-export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$(uv run python -c 'import sys; print(sys.prefix)')/lib:$LD_LIBRARY_PATH
 ```
 
 ## Cleanup

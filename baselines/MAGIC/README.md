@@ -6,7 +6,7 @@
 
 | Requirement | Version |
 |---|---|
-| Conda (Miniconda / Mamba) | any recent |
+| [uv](https://docs.astral.sh/uv/) | any recent |
 | CUDA (optional, for GPU) | 11.6+ |
 
 ## Directory Layout
@@ -26,7 +26,8 @@ PROJECT_ROOT/
 │       └── trace_labels.csv
 └── baselines/MAGIC/                   # <- you are here
     ├── Makefile                       # One-command reproducibility
-    ├── environment.yml
+    ├── pyproject.toml                 # uv project definition
+    ├── .python-version                # Pins Python 3.9
     ├── data/                          # Generated: processed DGL graphs
     ├── checkpoints/                   # Generated: trained model weights
     └── results/paper/                 # Generated: evaluation logs
@@ -37,9 +38,8 @@ PROJECT_ROOT/
 From the `baselines/MAGIC/` directory:
 
 ```bash
-# 1. Create the conda environment (one-time)
+# 1. Create the uv environment (one-time)
 make setup
-conda activate MAGIC
 
 # 2. Run the full pipeline: data -> train -> eval
 make all
@@ -56,13 +56,11 @@ This will:
 
 ```bash
 make setup
-conda activate MAGIC
 ```
 
 Or manually:
 ```bash
-conda env create -f environment.yml
-conda activate MAGIC
+uv sync
 ```
 
 ### 2. Data Preparation
@@ -80,7 +78,7 @@ make data DATA_DIR=/path/to/DARPA GROUND_TRUTH_DIR=/path/to/labels
 
 To process a single dataset manually:
 ```bash
-python utils/data_parser_daily.py \
+uv run python utils/data_parser_daily.py \
     --dataset cadets \
     --data_dir ../../data/DARPA/CADETS_E3 \
     --ground_truth ../../ground_truth/reapr-ground-truth/darpa-tc-engagement3/cadets_labels.csv \
@@ -96,7 +94,7 @@ make train DEVICE=0  # use GPU 0
 
 Or a single run:
 ```bash
-python train.py --dataset cadets --seed 71 --device 0
+uv run python train.py --dataset cadets --seed 71 --device 0
 ```
 
 **Arguments:**
@@ -125,7 +123,7 @@ make eval DEVICE=0   # use GPU 0
 
 Or a single run:
 ```bash
-python eval.py --dataset cadets --seed 71 --device 0
+uv run python eval.py --dataset cadets --seed 71 --device 0
 ```
 
 Results are written to `results/paper/<dataset>_seed<seed>.log`.

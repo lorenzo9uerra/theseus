@@ -2,7 +2,7 @@
 # PIDSMaker - Reproducible Artifact Pipeline
 # ============================================================
 # Usage:
-#   make setup              Install conda environment + package
+#   make setup              Install uv environment + package
 #   make orthrus            Train & evaluate Orthrus (all seeds)
 #   make velox              Train & evaluate Velox (all seeds)
 #   make all                Run both Orthrus and Velox
@@ -24,7 +24,6 @@ PIDS_ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 PROJECT_ROOT := $(abspath $(PIDS_ROOT)/../..)
 
 CSV_BASE_DIR ?= $(PROJECT_ROOT)/data/DARPA
-CONDA_ENV    := PIDSMaker
 
 DATASETS := CADETS_E3 FIVEDIRECTIONS_E3 THEIA_E3 TRACE_E3
 SEEDS    := 111 333 828 0 433
@@ -58,7 +57,7 @@ help:
 	@echo "PIDSMaker Artifact Evaluation"
 	@echo "============================="
 	@echo ""
-	@echo "  make setup          - Create conda env & install package"
+	@echo "  make setup          - Create uv env & install package"
 	@echo "  make orthrus        - Full Orthrus pipeline (all datasets, all seeds)"
 	@echo "  make velox          - Full Velox pipeline (all datasets, all seeds)"
 	@echo "  make all            - Run both Orthrus and Velox"
@@ -76,17 +75,14 @@ help:
 # ---------- Environment ----------
 
 setup:
-	@echo "=== Creating conda environment '$(CONDA_ENV)' ==="
-	conda env create -f $(PIDS_ROOT)/environment.yaml --name $(CONDA_ENV) || \
-		conda env update -f $(PIDS_ROOT)/environment.yaml --name $(CONDA_ENV)
-	@echo "=== Installing PIDSMaker package (editable) ==="
-	conda run -n $(CONDA_ENV) pip install -e $(PIDS_ROOT)
+	@echo "=== Setting up uv environment ==="
+	cd $(PIDS_ROOT) && uv sync
 	@echo ""
-	@echo "=== Environment ready. Activate with: conda activate $(CONDA_ENV) ==="
+	@echo "=== Environment ready. Use 'uv run' or 'source .venv/bin/activate' ==="
 
 verify-env:
-	@python -c "import torch; import pidsmaker; print('Environment OK: torch=' + torch.__version__)" \
-		|| (echo "ERROR: Required packages not found. Run 'make setup' and 'conda activate $(CONDA_ENV)'." && exit 1)
+	@cd $(PIDS_ROOT) && uv run python -c "import torch; import pidsmaker; print('Environment OK: torch=' + torch.__version__)" \
+		|| (echo "ERROR: Required packages not found. Run 'make setup'." && exit 1)
 
 verify-links:
 	@test -d "$(CSV_BASE_DIR)" || (echo "ERROR: Data directory not found: $(CSV_BASE_DIR)" && exit 1)
@@ -101,7 +97,7 @@ orthrus: verify-env verify-links
 	@for ds in $(DATASETS); do \
 		for seed in $(SEEDS); do \
 			echo "=== Orthrus | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 python $(PIDS_ROOT)/pidsmaker/main.py \
+			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
 				orthrus $$ds \
 				--tuned \
 				--restart_from_scratch \
@@ -123,7 +119,7 @@ eval-orthrus: verify-env verify-links
 	@for ds in $(DATASETS); do \
 		for seed in $(SEEDS); do \
 			echo "=== Orthrus eval | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 python $(PIDS_ROOT)/pidsmaker/main.py \
+			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
 				orthrus $$ds \
 				--tuned \
 				--force_restart evaluation \
@@ -146,7 +142,7 @@ velox: verify-env verify-links
 	@for ds in $(DATASETS); do \
 		for seed in $(SEEDS); do \
 			echo "=== Velox | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 python $(PIDS_ROOT)/pidsmaker/main.py \
+			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
 				velox $$ds \
 				--tuned \
 				--restart_from_scratch \
@@ -168,7 +164,7 @@ eval-velox: verify-env verify-links
 	@for ds in $(DATASETS); do \
 		for seed in $(SEEDS); do \
 			echo "=== Velox eval | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 python $(PIDS_ROOT)/pidsmaker/main.py \
+			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
 				velox $$ds \
 				--tuned \
 				--force_restart evaluation \

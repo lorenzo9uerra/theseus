@@ -58,7 +58,8 @@ def store_netflow(file_path: str, output_path: str, index_id: int, filelist: lis
         print(f"Loading existing netflow from {parquet_file}")
         df = pl.read_parquet(parquet_file)
         uuid2hash = dict(zip(df["node_uuid"], df["hash_id"], strict=False))
-        return df["index_id"].max() + 1, uuid2hash
+        next_id = df.select(pl.col("index_id").max().fill_null(0) + 1).item()
+        return next_id, uuid2hash
 
     print("Processing netflow data")
     netobj2hash = {}
@@ -127,7 +128,8 @@ def store_process(file_path: str, output_path: str, index_id: int, filelist: lis
         print(f"Loading existing process from {parquet_file}")
         df = pl.read_parquet(parquet_file)
         uuid2hash = dict(zip(df["node_uuid"], df["hash_id"], strict=False))
-        return df["index_id"].max() + 1, uuid2hash
+        next_id = df.select(pl.col("index_id").max().fill_null(0) + 1).item()
+        return next_id, uuid2hash
 
     print("Processing process data")
     process_obj2hash = {}
@@ -242,7 +244,8 @@ def store_file(file_path: str, output_path: str, index_id: int, filelist: list):
         print(f"Loading existing file from {parquet_file}")
         df = pl.read_parquet(parquet_file)
         uuid2hash = dict(zip(df["node_uuid"], df["hash_id"], strict=False))
-        return df["index_id"].max() + 1, uuid2hash
+        next_id = df.select(pl.col("index_id").max().fill_null(0) + 1).item()
+        return next_id, uuid2hash
 
     print("Processing file data")
     file_obj2hash = {}

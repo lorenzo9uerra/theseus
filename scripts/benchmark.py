@@ -11,6 +11,7 @@ import random
 import statistics
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -29,47 +30,62 @@ from utils.utils import create_one_hot, log
 
 WINDOW_SIZE_MINUTES = 15
 
-DATASET_STATISTICS = {
-    "CADETS_E3": {
-        "avg_nodes": 690,
-        "avg_edges": 8948,
-        "median_nodes": 513,
-        "median_edges": 7686,
-        "max_nodes": 8295,
-        "max_edges": 46572,
-        "node_type_dist": {"process": 0.33, "file": 0.54, "netflow": 0.13},
-        "total_graphs": 871,
-    },
-    "THEIA_E3": {
-        "avg_nodes": 4306,
-        "avg_edges": 31677,
-        "median_nodes": 4380,
-        "median_edges": 15100,
-        "max_nodes": 9888,
-        "max_edges": 161360,
-        "node_type_dist": {"process": 0.08, "file": 0.66, "netflow": 0.26},
-        "total_graphs": 316,
-    },
-    "FIVEDIRECTIONS_E3": {
-        "avg_nodes": 4370,
-        "avg_edges": 13843,
-        "median_nodes": 5430,
-        "median_edges": 11817,
-        "max_nodes": 9972,
-        "max_edges": 101358,
-        "node_type_dist": {"process": 0.07, "file": 0.90, "netflow": 0.03},
-        "total_graphs": 948,
-    },
-    "TRACE_E3": {
-        "avg_nodes": 5757,
-        "avg_edges": 14384,
-        "median_nodes": 5636,
-        "median_edges": 7456,
-        "max_nodes": 10000,
-        "max_edges": 142902,
-        "node_type_dist": {"process": 0.15, "file": 0.36, "netflow": 0.49},
-        "total_graphs": 559,
-    },
+
+@dataclass
+class DatasetStatistics:
+    """Statistics for a specific dataset's graph structure."""
+
+    avg_nodes: int
+    avg_edges: int
+    median_nodes: int
+    median_edges: int
+    max_nodes: int
+    max_edges: int
+    node_type_dist: dict[str, float]
+    total_graphs: int
+
+
+DATASET_STATISTICS: dict[str, DatasetStatistics] = {
+    "CADETS_E3": DatasetStatistics(
+        avg_nodes=690,
+        avg_edges=8948,
+        median_nodes=513,
+        median_edges=7686,
+        max_nodes=8295,
+        max_edges=46572,
+        node_type_dist={"process": 0.33, "file": 0.54, "netflow": 0.13},
+        total_graphs=871,
+    ),
+    "THEIA_E3": DatasetStatistics(
+        avg_nodes=4306,
+        avg_edges=31677,
+        median_nodes=4380,
+        median_edges=15100,
+        max_nodes=9888,
+        max_edges=161360,
+        node_type_dist={"process": 0.08, "file": 0.66, "netflow": 0.26},
+        total_graphs=316,
+    ),
+    "FIVEDIRECTIONS_E3": DatasetStatistics(
+        avg_nodes=4370,
+        avg_edges=13843,
+        median_nodes=5430,
+        median_edges=11817,
+        max_nodes=9972,
+        max_edges=101358,
+        node_type_dist={"process": 0.07, "file": 0.90, "netflow": 0.03},
+        total_graphs=948,
+    ),
+    "TRACE_E3": DatasetStatistics(
+        avg_nodes=5757,
+        avg_edges=14384,
+        median_nodes=5636,
+        median_edges=7456,
+        max_nodes=10000,
+        max_edges=142902,
+        node_type_dist={"process": 0.15, "file": 0.36, "netflow": 0.49},
+        total_graphs=559,
+    ),
 }
 
 
@@ -425,7 +441,7 @@ def main():
     config = parse_config(config_args)
     set_seed(args.seed)
 
-    dataset_stats = DATASET_STATISTICS.get(
+    dataset_stats: DatasetStatistics = DATASET_STATISTICS.get(
         args.dataset, DATASET_STATISTICS["CADETS_E3"]
     )
 
@@ -434,19 +450,19 @@ def main():
         num_edges = args.num_edges
         size_desc = "custom"
     elif args.size == "median":
-        num_nodes = dataset_stats["median_nodes"]
-        num_edges = dataset_stats["median_edges"]
+        num_nodes = dataset_stats.median_nodes
+        num_edges = dataset_stats.median_edges
         size_desc = "median"
     elif args.size == "max":
-        num_nodes = dataset_stats["max_nodes"]
-        num_edges = dataset_stats["max_edges"]
+        num_nodes = dataset_stats.max_nodes
+        num_edges = dataset_stats.max_edges
         size_desc = "max"
     else:
-        num_nodes = dataset_stats["avg_nodes"]
-        num_edges = dataset_stats["avg_edges"]
+        num_nodes = dataset_stats.avg_nodes
+        num_edges = dataset_stats.avg_edges
         size_desc = "average"
 
-    node_type_dist = dataset_stats["node_type_dist"]
+    node_type_dist = dataset_stats.node_type_dist
 
     log(f"Benchmarking Theseus pipeline for {args.dataset}")
     log(f"Device: {config.device}")
@@ -572,8 +588,8 @@ def main():
     speedup_vs_realtime = window_ms / e2e_latency_ms
     utilization_pct = (e2e_latency_ms / window_ms) * 100
 
-    total_graphs = dataset_stats.get("total_graphs", 500)
-    avg_edges = dataset_stats.get("avg_edges", num_edges)
+    total_graphs = dataset_stats.total_graphs
+    avg_edges = dataset_stats.avg_edges
     total_edges = avg_edges * total_graphs
     total_seconds = total_graphs * WINDOW_SIZE_MINUTES * 60
     events_per_sec = total_edges / total_seconds

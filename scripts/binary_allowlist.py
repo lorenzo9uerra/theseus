@@ -127,18 +127,14 @@ def compute_classification_metrics(
     )
 
 
-def load_ground_truth(dataset_name: str, data_dir: Path) -> tuple[set[str], set[str]]:
+def load_ground_truth(
+    dataset_name: str, ground_truth_dir: Path
+) -> tuple[set[str], set[str]]:
     """
     Parses ground truth CSV to retrieve Attack and Contaminated UUIDs.
     Returns: (attack_uuids, contaminated_uuids)
     """
-    gt_path = (
-        data_dir
-        / "ground_truth"
-        / "reapr-ground-truth"
-        / "darpa-tc-engagement3"
-        / f"{dataset_name.lower()}_labels.csv"
-    )
+    gt_path = ground_truth_dir / f"{dataset_name.lower()}_labels.csv"
 
     if not gt_path.exists():
         logger.warning(f"Ground truth file missing: {gt_path}")
@@ -180,10 +176,8 @@ def load_process_metadata(
 ) -> tuple[dict[str, tuple[str, str]], dict[str, str]]:
     """Loads process node table. Returns (index_id -> (path, cmd), uuid -> index_id)."""
     # Try Parquet first, fall back to CSV
-    parquet_path = (
-        data_dir / "data" / "DARPA" / dataset_name / "process_node_table.parquet"
-    )
-    csv_path = data_dir / "data" / "DARPA" / dataset_name / "process_node_table.csv"
+    parquet_path = data_dir / dataset_name / "process_node_table.parquet"
+    csv_path = data_dir / dataset_name / "process_node_table.csv"
 
     if parquet_path.exists():
         df = pl.read_parquet(
@@ -210,8 +204,8 @@ def get_active_nodes(
     dataset_name: str, days: list[int], year_month: str, data_dir: Path
 ) -> set[str]:
     """Retrieve set of active node IDs for given days from event table."""
-    parquet_path = data_dir / "data" / "DARPA" / dataset_name / "event_table.parquet"
-    csv_path = data_dir / "data" / "DARPA" / dataset_name / "event_table.csv"
+    parquet_path = data_dir / dataset_name / "event_table.parquet"
+    csv_path = data_dir / dataset_name / "event_table.csv"
 
     day_strs = [f"{year_month}-{int(d):02d}" for d in days]
 
@@ -220,9 +214,7 @@ def get_active_nodes(
     elif csv_path.exists():
         lf = pl.scan_csv(csv_path)
     else:
-        raise FileNotFoundError(
-            f"Event table not found in {data_dir / 'data' / dataset_name}"
-        )
+        raise FileNotFoundError(f"Event table not found in {data_dir / dataset_name}")
 
     # Convert timestamp (nanoseconds) to day string and filter
     res = (
@@ -238,13 +230,15 @@ def get_active_nodes(
         .collect()
     )
 
+    assert isinstance(res, pl.DataFrame)
+
     return set(map(str, res["src_index_id"].to_list())) | set(
         map(str, res["dst_index_id"].to_list())
     )
 
 
 def analyze_dataset(
-    dataset_name: str, config: dict, data_dir: Path
+    dataset_name: str, config: dict, data_dir: Path, ground_truth_dir: Path
 ) -> DatasetStats | None:
     """Execute analysis pipeline for a single dataset."""
     logger.info(f"Analyzing {dataset_name}...")
@@ -308,7 +302,9 @@ def analyze_dataset(
     novel_test_cmds = len(test_cmds - train_cmds)
     novel_test_paths = len(test_paths - train_paths)
 
-    attack_uuids, contam_uuids = load_ground_truth(dataset_name.split("_")[0], data_dir)
+    attack_uuids, contam_uuids = load_ground_truth(
+        dataset_name.split("_")[0], ground_truth_dir
+    )
 
     attack_ids = {uuid_to_id[u] for u in attack_uuids if u in uuid_to_id}
     contam_ids = {uuid_to_id[u] for u in contam_uuids if u in uuid_to_id}
@@ -436,22 +432,44 @@ def main():
     parser.add_argument(
         "--output", default="outputs/vocab_analysis.csv", help="CSV result path"
     )
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=PROJECT_ROOT / "data" / "DARPA",
+        help="Directory containing dataset folders (default: PROJECT_ROOT/data/DARPA)",
+    )
+    parser.add_argument(
+        "--ground-truth-dir",
+        type=Path,
+        default=PROJECT_ROOT
+        / "ground_truth"
+        / "reapr-ground-truth"
+        / "darpa-tc-engagement3",
+        help="Directory containing ground truth CSV files (default: PROJECT_ROOT/ground_truth/reapr-ground-truth/darpa-tc-engagement3)",
+    )
+    parser.add_argument(
+        "--config-dir",
+        type=Path,
+        default=PROJECT_ROOT / "configs" / "datasets",
+        help="Directory containing dataset config YAML files (default: PROJECT_ROOT/configs/datasets)",
+    )
 
     args = parser.parse_args()
 
     if not args.all_datasets and not args.dataset:
         parser.error("Specify a dataset or use --all-datasets")
 
-    config_dir = PROJECT_ROOT / "configs" / "datasets"
     target_datasets = (
-        get_all_datasets(config_dir) if args.all_datasets else [args.dataset]
+        get_all_datasets(args.config_dir) if args.all_datasets else [args.dataset]
     )
 
     results = []
     for ds_name in target_datasets:
         try:
-            config = load_dataset_config(ds_name, config_dir)
-            stats = analyze_dataset(ds_name, config, PROJECT_ROOT)
+            config = load_dataset_config(ds_name, args.config_dir)
+            stats = analyze_dataset(
+                ds_name, config, args.data_dir, args.ground_truth_dir
+            )
             if stats:
                 print_report(stats)
                 results.append(stats)

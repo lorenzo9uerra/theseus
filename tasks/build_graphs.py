@@ -945,6 +945,8 @@ def get_nodes_from_selected_days(config, parquet_path):
             .collect()
         )
 
+        assert isinstance(day_events, pl.DataFrame)
+
         if day_events.is_empty():
             continue
 
@@ -979,6 +981,8 @@ def get_training_nodes_from_csv(config):
             .select(["src_index_id", "dst_index_id"])
             .collect()
         )
+
+        assert isinstance(day_events, pl.DataFrame)
 
         if day_events.is_empty():
             continue

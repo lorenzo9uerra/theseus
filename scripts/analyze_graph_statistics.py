@@ -66,9 +66,9 @@ def count_node_types(node_features: torch.Tensor) -> tuple[int, int, int]:
     type_onehot = node_features[:, :3]
     type_indices = type_onehot.argmax(dim=1)
 
-    process_count = (type_indices == 0).sum().item()
-    file_count = (type_indices == 1).sum().item()
-    netflow_count = (type_indices == 2).sum().item()
+    process_count = int((type_indices == 0).sum().item())
+    file_count = int((type_indices == 1).sum().item())
+    netflow_count = int((type_indices == 2).sum().item())
 
     return process_count, file_count, netflow_count
 

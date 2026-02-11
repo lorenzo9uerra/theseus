@@ -42,7 +42,7 @@ def set_random_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.determinstic = True
+    torch.backends.cudnn.deterministic = True
 
 
 def create_activation(name):

@@ -133,7 +133,7 @@ train-all-seeds: verify-env data
 				> "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" 2>&1 \
 			&& mv "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/$${ds}_seed$${seed}.log" \
 		|| { rm -f "$(RESULT_DIR)/$${ds}_seed$${seed}.log.tmp"; exit 1; }; \
-			tail -20 "$(RESULT_DIR)/$${ds}_seed$${seed}.log"; \
+			tail -10 "$(RESULT_DIR)/$${ds}_seed$${seed}.log"; \
 		done; \
 	done
 	@echo ""
@@ -150,7 +150,7 @@ $(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$
 	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \
 		> "$(RESULT_DIR)/$(1)_seed$(2).log.tmp" 2>&1 \
 		&& mv "$(RESULT_DIR)/$(1)_seed$(2).log.tmp" "$(RESULT_DIR)/$(1)_seed$(2).log"
-	@tail -20 "$(RESULT_DIR)/$(1)_seed$(2).log"
+	@tail -10 "$(RESULT_DIR)/$(1)_seed$(2).log"
 endef
 
 $(foreach ds,$(DATASETS),$(foreach s,$(SEEDS),$(eval $(call eval_rule,$(ds),$(s)))))

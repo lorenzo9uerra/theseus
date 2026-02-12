@@ -221,8 +221,7 @@ def fetch_node_metadata(config):
 
     process_path = _get_node_table_path(data_dir, "process_node_table")
     if process_path:
-        file_size_gb = os.path.getsize(process_path) / (1024**3)
-        log(f"Loading process nodes from {process_path} ({file_size_gb:.1f} GB)...")
+        log(f"Loading process nodes from {process_path}...")
 
         process_count = 0
         result = _read_node_table_batched(

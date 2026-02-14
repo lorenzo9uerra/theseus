@@ -170,11 +170,12 @@ def _tokenize_ip(ip_str: str):
     tokens.append(f"subnet_{ip_parts[0]}_{ip_parts[1]}")
 
     first_octet = int(ip_parts[0])
+    second_octet = int(ip_parts[1])
     if first_octet == 10:
         tokens.append("private_ip_class_a")
-    elif 172 <= first_octet <= 175:
+    elif first_octet == 172 and 16 <= second_octet <= 31:
         tokens.append("private_ip_class_b")
-    elif first_octet == 192:
+    elif first_octet == 192 and second_octet == 168:
         tokens.append("private_ip_class_c")
     elif first_octet == 127:
         tokens.append("localhost_ip")

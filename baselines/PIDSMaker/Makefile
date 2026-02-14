@@ -44,7 +44,7 @@ else
   DEVICE_FLAG := --cpu
 endif
 
-RESULT_DIR := $(PIDS_ROOT)/results/paper
+RESULT_DIR := $(PIDS_ROOT)/results
 
 # ---------- Targets ----------
 

@@ -141,7 +141,7 @@ train-all-seeds: verify-env data
 
 # ---------- Evaluation ----------
 
-RESULT_DIR := $(MAGIC_ROOT)/results/paper
+RESULT_DIR := $(MAGIC_ROOT)/results
 
 define eval_rule
 $(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt

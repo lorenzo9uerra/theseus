@@ -28,7 +28,7 @@ MAGIC_LOG_RE = re.compile(r"^(?P<dataset>[a-z]+)_seed(?P<seed>\d+)\.log$")
 
 def _default_log_dir() -> Path:
     magic_root = Path(__file__).resolve().parents[1]
-    return magic_root / "results" / "paper"
+    return magic_root / "results"
 
 
 def _std(vals: list[float]) -> float:
@@ -113,7 +113,7 @@ def main() -> None:
         "--log_dir",
         type=Path,
         default=_default_log_dir(),
-        help="Directory containing MAGIC evaluation logs (default: baselines/MAGIC/results/paper).",
+        help="Directory containing MAGIC evaluation logs (default: baselines/MAGIC/results).",
     )
     args = parser.parse_args()
 

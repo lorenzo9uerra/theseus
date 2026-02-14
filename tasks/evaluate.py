@@ -163,8 +163,8 @@ def evaluate(model, val_data, test_data, config, ground_truth):
     Evaluate at ENTITY level (one score per unique node via max-pooling).
 
     Two evaluation scopes:
-    - Causal (final_*): attack + contaminated nodes as positives
-    - Attack Chain (final_strict_*): only attack nodes, contaminated excluded
+    - Causal: attack + contaminated nodes as positives (logged as final_test_* + test_adp_causal)
+    - Strict Attack Chain: only attack nodes are positive (contaminated excluded; logged as final_strict_test_* + test_adp_strict)
     """
     # Validation: aggregate to entity level, then find threshold
     val_scores_raw, val_labels_raw, val_nodes_raw, _ = inference_loop(
@@ -299,6 +299,14 @@ def evaluate(model, val_data, test_data, config, ground_truth):
                     }
                 )
 
+    if not all_contaminated_nids:
+        metrics.setdefault("final_strict_test_ap", metrics.get("final_test_ap"))
+        metrics.setdefault(
+            "final_strict_test_binary_f1", metrics.get("final_test_binary_f1")
+        )
+        metrics.setdefault("final_strict_test_mcc", metrics.get("final_test_mcc"))
+        metrics.setdefault("final_strict_test_fpr", metrics.get("final_test_fpr"))
+
     out_dir = config.outputs_dir
     os.makedirs(out_dir, exist_ok=True)
 
@@ -361,6 +369,9 @@ def evaluate(model, val_data, test_data, config, ground_truth):
             metrics["test_adp_causal"] = adp_causal_score
         except Exception as exc:
             log(f"Causal ADP computation failed: {exc}")
+
+    if not all_contaminated_nids:
+        metrics.setdefault("test_adp_strict", metrics.get("test_adp_causal"))
 
     for key, value in metrics.items():
         log(f"{key}: {value}")

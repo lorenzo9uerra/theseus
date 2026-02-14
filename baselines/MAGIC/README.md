@@ -27,10 +27,10 @@ PROJECT_ROOT/
 └── baselines/MAGIC/                   # <- you are here
     ├── Makefile                       # One-command reproducibility
     ├── pyproject.toml                 # uv project definition
-    ├── .python-version                # Pins Python 3.9
-    ├── data/                          # Generated: processed DGL graphs
-    ├── checkpoints/                   # Generated: trained model weights
-    └── results/paper/                 # Generated: evaluation logs
+	    ├── .python-version                # Pins Python 3.9
+	    ├── data/                          # Generated: processed DGL graphs
+	    ├── checkpoints/                   # Generated: trained model weights
+	    └── results/                       # Generated: evaluation logs
 ```
 
 ## Quick Start (One Command)
@@ -45,10 +45,10 @@ make setup
 make all
 ```
 
-This will:
-1. Parse the raw DARPA datasets into daily DGL graphs (-> `data/<dataset>/`).
-3. Train MAGIC on each dataset with seeds {71, 83, 232, 441, 915} (-> `checkpoints/`).
-4. Evaluate every checkpoint and save logs (-> `results/paper/`).
+	This will:
+	1. Parse the raw DARPA datasets into daily DGL graphs (-> `data/<dataset>/`).
+	3. Train MAGIC on each dataset with seeds {71, 83, 232, 441, 915} (-> `checkpoints/`).
+	4. Evaluate every checkpoint and save logs (-> `results/`).
 
 ## Step-by-Step Reproduction
 
@@ -126,7 +126,7 @@ Or a single run:
 uv run python eval.py --dataset cadets --seed 71 --device 0
 ```
 
-Results are written to `results/paper/<dataset>_seed<seed>.log`.
+Results are written to `results/<dataset>_seed<seed>.log`.
 
 ## Expected Output
 
@@ -139,11 +139,11 @@ Key metrics: F1, PR-AUC, FPR, MCC, ADP (Attack Detection Precision).
 
 ## Aggregating Results
 
-Aggregate the per-seed logs in `results/paper/` into mean ± std tables:
+Aggregate the per-seed logs in `results/` into mean ± std tables:
 
 ```bash
 uv run python utils/aggregate_results.py
-# or: uv run python utils/aggregate_results.py --log_dir results/paper
+# or: uv run python utils/aggregate_results.py --log_dir results
 ```
 
 ## Customisation

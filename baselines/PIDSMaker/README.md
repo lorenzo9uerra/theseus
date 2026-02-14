@@ -34,10 +34,10 @@ PROJECT_ROOT/
 └── baselines/PIDSMaker/              # <- you are here
     ├── Makefile                       # One-command reproducibility
     ├── pyproject.toml                 # uv project definition + package metadata
-    ├── .python-version                # Pins Python 3.9
-    ├── ground_truth -> ../../ground_truth  # Symlink (must exist)
-    ├── artifacts/                     # Generated: pipeline intermediate files
-    └── results/paper/                 # Generated: evaluation logs
+	    ├── .python-version                # Pins Python 3.9
+	    ├── ground_truth -> ../../ground_truth  # Symlink (must exist)
+	    ├── artifacts/                     # Generated: pipeline intermediate files
+	    └── results/                       # Generated: evaluation logs
 ```
 
 ## Quick Start
@@ -108,7 +108,7 @@ uv run python pidsmaker/main.py orthrus CADETS_E3 --tuned --restart_from_scratch
 
 ### 4. Results
 
-Logs are saved to `results/paper/<system>_<dataset>_seed<seed>.log`.
+Logs are saved to `results/<system>_<dataset>_seed<seed>.log`.
 
 Each log contains two evaluation scenarios:
 - **Strict Attack Chain**: contaminated nodes excluded.
@@ -118,11 +118,11 @@ Key metrics: PR-AUC, MCC, F1, ADP, FNR.
 
 ## Aggregating Results
 
-Aggregate the per-seed logs in `results/paper/` into mean ± std tables:
+Aggregate the per-seed logs in `results/` into mean ± std tables:
 
 ```bash
 uv run python scripts/aggregate_results.py
-# or: uv run python scripts/aggregate_results.py --log_dir results/paper
+# or: uv run python scripts/aggregate_results.py --log_dir results
 ```
 
 ## Customisation
@@ -149,7 +149,7 @@ export LD_LIBRARY_PATH=$(uv run python -c 'import sys; print(sys.prefix)')/lib:$
 ## Cleanup
 
 ```bash
-make clean   # Remove results/paper/
+make clean   # Remove results/
 ```
 
 ## Note on Compatibility

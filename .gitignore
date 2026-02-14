@@ -9,6 +9,7 @@ checkpoints/
 slurm/
 docs/
 outputs/
+results/
 
 # Baseline specific
 /baselines/MAGIC/data/*/
@@ -18,3 +19,4 @@ outputs/
 /baselines/MAGIC/eval_result/
 /baselines/PIDSMaker/data
 /baselines/PIDSMaker/ground_truth
+/baselines/PIDSMaker/results/

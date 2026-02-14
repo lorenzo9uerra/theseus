@@ -3,8 +3,8 @@ import random
 
 import numpy as np
 import torch
-import wandb
 
+import wandb
 from tasks.build_graphs import build_graphs
 from tasks.evaluate import evaluate
 from tasks.training import initialize_model, train

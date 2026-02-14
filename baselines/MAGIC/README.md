@@ -137,6 +137,15 @@ Each evaluation log contains two-level metrics:
 
 Key metrics: F1, PR-AUC, FPR, MCC, ADP (Attack Detection Precision).
 
+## Aggregating Results
+
+Aggregate the per-seed logs in `results/paper/` into mean ± std tables:
+
+```bash
+uv run python utils/aggregate_results.py
+# or: uv run python utils/aggregate_results.py --log_dir results/paper
+```
+
 ## Customisation
 
 | Variable | Default | Description |

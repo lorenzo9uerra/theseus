@@ -69,7 +69,9 @@ theseus/
 
 ### Erratum: Table 2 Correction
 
-Due to a parsing error in the aggregation script to generate **Table 2**, the False Positive Rate (FPR) reported for the **Velox** baseline on the **Cadets** dataset was erroneously calculated. This error affected the mean and standard deviation for that specific entry, resulting in a value outside the valid range. The correct value is:
+>Note: The final published version of the paper has been updated to reflect the correct values produced by this artifact.
+
+In the originally submitted manuscript, the False Positive Rate (FPR) reported for the **Velox** baseline on the **Cadets** dataset was erroneously calculated. This error affected the mean and standard deviation for that specific entry, resulting in a value outside the valid range. The correct value is:
 
 * **FPR of Velox on CADETS:** 0.0031 ± 0.0028
 

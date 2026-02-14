@@ -116,6 +116,15 @@ Each log contains two evaluation scenarios:
 
 Key metrics: PR-AUC, MCC, F1, ADP, FNR.
 
+## Aggregating Results
+
+Aggregate the per-seed logs in `results/paper/` into mean ± std tables:
+
+```bash
+uv run python scripts/aggregate_results.py
+# or: uv run python scripts/aggregate_results.py --log_dir results/paper
+```
+
 ## Customisation
 
 | Variable | Default | Description |

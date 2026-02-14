@@ -2,9 +2,9 @@ import csv
 import os
 
 import numpy as np
-import wandb
 from matplotlib import pyplot as plt
 
+import wandb
 from utils.utils import log, read_node_table
 
 

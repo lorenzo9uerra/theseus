@@ -24,7 +24,7 @@ Download the following two archives from Zenodo:
     * URL: [https://doi.org/10.5281/zenodo.18450778](https://doi.org/10.5281/zenodo.18450778)
 
 
-* **Reproducibility Artifacts:** Contains the graph construction cache, Theseus model checkpoints, and Word2Vec embeddings required to reproduce the exact results reported in the paper without retraining.
+* **Reproducibility Artifacts:** Contains the graph construction cache, Theseus model checkpoints, and Word2Vec embeddings required to reproduce the exact results reported for the Theseus model without retraining.
     * URL: [https://doi.org/10.5281/zenodo.18489504](https://doi.org/10.5281/zenodo.18489504)
 
 

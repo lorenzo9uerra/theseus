@@ -28,7 +28,7 @@ for SEED in "${COMMON_SEEDS[@]}"; do
         > "${LOG_FILE}.tmp" 2>&1 \
     && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
     || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -10 "${LOG_FILE}"
+    tail -20 "${LOG_FILE}"
 done
 
 # 2. FIVEDIRECTIONS_E3
@@ -43,7 +43,7 @@ for SEED in "${COMMON_SEEDS[@]}"; do
         > "${LOG_FILE}.tmp" 2>&1 \
     && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
     || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -10 "${LOG_FILE}"
+    tail -20 "${LOG_FILE}"
 done
 
 # 3. THEIA_E3
@@ -58,7 +58,7 @@ for SEED in "${COMMON_SEEDS[@]}"; do
         > "${LOG_FILE}.tmp" 2>&1 \
     && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
     || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -10 "${LOG_FILE}"
+    tail -20 "${LOG_FILE}"
 done
 
 # 4. TRACE_E3
@@ -73,7 +73,7 @@ for SEED in "${COMMON_SEEDS[@]}"; do
         > "${LOG_FILE}.tmp" 2>&1 \
     && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
     || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -10 "${LOG_FILE}"
+    tail -20 "${LOG_FILE}"
 done
 
 echo "All reproduction experiments finished."

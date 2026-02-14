@@ -21,11 +21,11 @@ To facilitate reproducibility, we provide pre-processed datasets and artifacts. 
 Download the following two archives from Zenodo:
 
 * **Processed Datasets:** Contains the Parquet and CSV files derived from the raw JSON logs. We highly recommend using the Parquet version for faster loading times and stricter type handling.
-    * URL: [https://zenodo.org/records/18450779](https://zenodo.org/records/18450779)
+    * URL: [https://doi.org/10.5281/zenodo.18450778](https://doi.org/10.5281/zenodo.18450778)
 
 
 * **Reproducibility Artifacts:** Contains the graph construction cache, Theseus model checkpoints, and Word2Vec embeddings required to reproduce the exact results reported in the paper without retraining.
-    * URL: [https://zenodo.org/records/18489505](https://zenodo.org/records/18489505)
+    * URL: [https://doi.org/10.5281/zenodo.18489504](https://doi.org/10.5281/zenodo.18489504)
 
 
 
@@ -83,6 +83,14 @@ Ensure you have extracted the `cache` and `checkpoints` folders as described abo
 
 ```bash
 ./scripts/reproduce_results.sh
+```
+
+Logs are written to `results/theseus_<dataset>_seed<seed>.log`.
+
+To aggregate the per-seed logs into mean ± std tables:
+
+```bash
+uv run python scripts/aggregate_results.py
 ```
 
 This process requires approximately 5 GB of RAM and 6 GB of GPU memory.

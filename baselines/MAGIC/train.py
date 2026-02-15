@@ -32,7 +32,26 @@ def _resolve_device(device_arg: int) -> torch.device:
             "Using cuda:0."
         )
         device_arg = 0
-    return torch.device(f"cuda:{device_arg}")
+    device = torch.device(f"cuda:{device_arg}")
+
+    try:
+        import dgl
+
+        test_g = dgl.graph((torch.tensor([0]), torch.tensor([0])), num_nodes=1)
+        test_g.to(device)
+    except Exception as exc:
+        msg = str(exc).lower()
+        if "cuda is not enabled" in msg or "device api cuda is not enabled" in msg:
+            print(
+                "Warning: DGL was installed without CUDA support (CPU-only build). "
+                "Falling back to CPU. To enable GPU, install a CUDA-enabled DGL wheel "
+                "(e.g., dgl-cu116 for CUDA 11.6)."
+            )
+        else:
+            print(f"Warning: failed to use DGL on {device}: {exc}. Falling back to CPU.")
+        return torch.device("cpu")
+
+    return device
 
 
 def main(main_args):

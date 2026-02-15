@@ -117,12 +117,12 @@ orthrus: verify-env verify-links
 				--detection.gnn_training.seed $$seed \
 				--tags orthrus,reproduction \
 				> "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" 2>&1 \
-			&& mv "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log" \
-			|| { rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
-			echo "  Done. Log: $(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
-			tail -5 "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
-		done; \
-	done
+				&& mv "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log" \
+				|| { code=$$?; rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp"; [ $$code -eq 130 ] && exit $$code; echo "  FAILED - see previous log"; continue; }; \
+				echo "  Done. Log: $(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
+				tail -5 "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
+			done; \
+		done
 	@echo "=== Orthrus complete ==="
 
 eval-orthrus: verify-env verify-links
@@ -140,11 +140,11 @@ eval-orthrus: verify-env verify-links
 				--detection.gnn_training.seed $$seed \
 				--tags orthrus,reproduction \
 				> "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" 2>&1 \
-			&& mv "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log" \
-			|| { rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
-			tail -5 "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
-		done; \
-	done
+				&& mv "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log" \
+				|| { code=$$?; rm -f "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log.tmp"; [ $$code -eq 130 ] && exit $$code; echo "  FAILED - see previous log"; continue; }; \
+				tail -5 "$(RESULT_DIR)/orthrus_$${ds}_seed$${seed}.log"; \
+			done; \
+		done
 	@echo "=== Orthrus eval complete ==="
 
 # ---------- Velox ----------
@@ -164,12 +164,12 @@ velox: verify-env verify-links
 				--detection.gnn_training.seed $$seed \
 				--tags velox,reproduction \
 				> "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" 2>&1 \
-			&& mv "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log" \
-			|| { rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
-			echo "  Done. Log: $(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
-			tail -5 "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
-		done; \
-	done
+				&& mv "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log" \
+				|| { code=$$?; rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp"; [ $$code -eq 130 ] && exit $$code; echo "  FAILED - see previous log"; continue; }; \
+				echo "  Done. Log: $(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
+				tail -5 "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
+			done; \
+		done
 	@echo "=== Velox complete ==="
 
 eval-velox: verify-env verify-links
@@ -187,11 +187,11 @@ eval-velox: verify-env verify-links
 				--detection.gnn_training.seed $$seed \
 				--tags velox,reproduction \
 				> "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" 2>&1 \
-			&& mv "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log" \
-			|| { rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp"; echo "  FAILED - see previous log"; continue; }; \
-			tail -5 "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
-		done; \
-	done
+				&& mv "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp" "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log" \
+				|| { code=$$?; rm -f "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log.tmp"; [ $$code -eq 130 ] && exit $$code; echo "  FAILED - see previous log"; continue; }; \
+				tail -5 "$(RESULT_DIR)/velox_$${ds}_seed$${seed}.log"; \
+			done; \
+		done
 	@echo "=== Velox eval complete ==="
 
 # ---------- Cleanup ----------

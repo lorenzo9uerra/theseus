@@ -103,7 +103,7 @@ uv run python train.py --dataset cadets --seed 71 --device 0
 |---|---|---|
 | `--dataset` | *required* | `cadets`, `fivedirections`, `theia`, `trace` |
 | `--seed` | 42 | Random seed |
-| `--device` | -1 | GPU id (-1 = CPU) |
+| `--device` | 0 | GPU id (-1 = CPU) |
 | `--lr` | 0.0018 | Learning rate |
 | `--weight_decay` | 5e-4 | Weight decay |
 | `--patience` | 10 | Early stopping patience (epochs) |
@@ -152,7 +152,7 @@ uv run python utils/aggregate_results.py
 |---|---|---|
 | `DATA_DIR` | `PROJECT_ROOT/data/DARPA` | Raw data location |
 | `GROUND_TRUTH_DIR` | `PROJECT_ROOT/ground_truth/...` | REAPR labels |
-| `DEVICE` | -1 (CPU) | GPU device id |
+| `DEVICE` | 0 | GPU device id (-1 = CPU) |
 | `SEEDS` | 71 83 232 441 915 | Seeds to train/eval |
 | `DATASETS` | cadets fivedirections theia trace | Datasets to process |
 | `WANDB` | *(unset)* | Set to 1 to enable Weights & Biases logging |

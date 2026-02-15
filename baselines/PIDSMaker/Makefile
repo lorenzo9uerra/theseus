@@ -14,6 +14,7 @@
 #   make orthrus DATASETS="CADETS_E3 THEIA_E3"
 #   make all CSV_BASE_DIR=/path/to/data/DARPA
 #   make all WANDB=1   Enable Weights & Biases logging
+#   make all USE_CPU=1  Force CPU
 # ============================================================
 
 SHELL := /bin/bash
@@ -28,6 +29,7 @@ CSV_BASE_DIR ?= $(PROJECT_ROOT)/data/DARPA
 DATASETS := CADETS_E3 FIVEDIRECTIONS_E3 THEIA_E3 TRACE_E3
 SEEDS    := 111 333 828 0 433
 DEVICE   ?=
+USE_CPU  ?= 0
 WANDB    ?=
 
 # Build --wandb flag when WANDB is set (e.g. make orthrus WANDB=1)
@@ -37,11 +39,18 @@ else
   WANDB_FLAG :=
 endif
 
-# Build --cpu flag if no GPU requested
-ifdef DEVICE
-  DEVICE_FLAG :=
-else
+# Default: use GPU if available. Set USE_CPU=1 to force CPU.
+ifeq ($(USE_CPU),1)
   DEVICE_FLAG := --cpu
+else
+  DEVICE_FLAG :=
+endif
+
+# Optional: set CUDA_VISIBLE_DEVICES via DEVICE (e.g., DEVICE=0).
+ifneq ($(strip $(DEVICE)),)
+  CUDA_ENV := CUDA_VISIBLE_DEVICES=$(DEVICE)
+else
+  CUDA_ENV :=
 endif
 
 RESULT_DIR := $(PIDS_ROOT)/results
@@ -69,7 +78,8 @@ help:
 	@echo "  CSV_BASE_DIR=$(CSV_BASE_DIR)"
 	@echo "  DATASETS=$(DATASETS)"
 	@echo "  SEEDS=$(SEEDS)"
-	@echo "  DEVICE=$(DEVICE)  (unset = CPU)"
+	@echo "  DEVICE=$(DEVICE)  (CUDA_VISIBLE_DEVICES; optional)"
+	@echo "  USE_CPU=$(USE_CPU)  (1 = force CPU)"
 	@echo "  WANDB=$(WANDB)  (set to 1 to enable W&B logging)"
 
 # ---------- Environment ----------
@@ -93,15 +103,15 @@ verify-links:
 # ---------- Orthrus ----------
 
 orthrus: verify-env verify-links
-	@mkdir -p $(RESULT_DIR)
-	@for ds in $(DATASETS); do \
-		for seed in $(SEEDS); do \
-			echo "=== Orthrus | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
-				orthrus $$ds \
-				--tuned \
-				--restart_from_scratch \
-				--csv_base_dir "$(CSV_BASE_DIR)" \
+		@mkdir -p $(RESULT_DIR)
+		@for ds in $(DATASETS); do \
+			for seed in $(SEEDS); do \
+				echo "=== Orthrus | $$ds | seed=$$seed ==="; \
+				cd $(PIDS_ROOT) && PYTHONHASHSEED=0 $(CUDA_ENV) uv run python $(PIDS_ROOT)/pidsmaker/main.py \
+					orthrus $$ds \
+					--tuned \
+					--restart_from_scratch \
+					--csv_base_dir "$(CSV_BASE_DIR)" \
 				$(DEVICE_FLAG) \
 				$(WANDB_FLAG) \
 				--detection.gnn_training.seed $$seed \
@@ -116,15 +126,15 @@ orthrus: verify-env verify-links
 	@echo "=== Orthrus complete ==="
 
 eval-orthrus: verify-env verify-links
-	@mkdir -p $(RESULT_DIR)
-	@for ds in $(DATASETS); do \
-		for seed in $(SEEDS); do \
-			echo "=== Orthrus eval | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
-				orthrus $$ds \
-				--tuned \
-				--force_restart evaluation \
-				--csv_base_dir "$(CSV_BASE_DIR)" \
+		@mkdir -p $(RESULT_DIR)
+		@for ds in $(DATASETS); do \
+			for seed in $(SEEDS); do \
+				echo "=== Orthrus eval | $$ds | seed=$$seed ==="; \
+				cd $(PIDS_ROOT) && PYTHONHASHSEED=0 $(CUDA_ENV) uv run python $(PIDS_ROOT)/pidsmaker/main.py \
+					orthrus $$ds \
+					--tuned \
+					--force_restart evaluation \
+					--csv_base_dir "$(CSV_BASE_DIR)" \
 				$(DEVICE_FLAG) \
 				$(WANDB_FLAG) \
 				--detection.gnn_training.seed $$seed \
@@ -140,15 +150,15 @@ eval-orthrus: verify-env verify-links
 # ---------- Velox ----------
 
 velox: verify-env verify-links
-	@mkdir -p $(RESULT_DIR)
-	@for ds in $(DATASETS); do \
-		for seed in $(SEEDS); do \
-			echo "=== Velox | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
-				velox $$ds \
-				--tuned \
-				--restart_from_scratch \
-				--csv_base_dir "$(CSV_BASE_DIR)" \
+		@mkdir -p $(RESULT_DIR)
+		@for ds in $(DATASETS); do \
+			for seed in $(SEEDS); do \
+				echo "=== Velox | $$ds | seed=$$seed ==="; \
+				cd $(PIDS_ROOT) && PYTHONHASHSEED=0 $(CUDA_ENV) uv run python $(PIDS_ROOT)/pidsmaker/main.py \
+					velox $$ds \
+					--tuned \
+					--restart_from_scratch \
+					--csv_base_dir "$(CSV_BASE_DIR)" \
 				$(DEVICE_FLAG) \
 				$(WANDB_FLAG) \
 				--detection.gnn_training.seed $$seed \
@@ -163,15 +173,15 @@ velox: verify-env verify-links
 	@echo "=== Velox complete ==="
 
 eval-velox: verify-env verify-links
-	@mkdir -p $(RESULT_DIR)
-	@for ds in $(DATASETS); do \
-		for seed in $(SEEDS); do \
-			echo "=== Velox eval | $$ds | seed=$$seed ==="; \
-			PYTHONHASHSEED=0 cd $(PIDS_ROOT) && uv run python $(PIDS_ROOT)/pidsmaker/main.py \
-				velox $$ds \
-				--tuned \
-				--force_restart evaluation \
-				--csv_base_dir "$(CSV_BASE_DIR)" \
+		@mkdir -p $(RESULT_DIR)
+		@for ds in $(DATASETS); do \
+			for seed in $(SEEDS); do \
+				echo "=== Velox eval | $$ds | seed=$$seed ==="; \
+				cd $(PIDS_ROOT) && PYTHONHASHSEED=0 $(CUDA_ENV) uv run python $(PIDS_ROOT)/pidsmaker/main.py \
+					velox $$ds \
+					--tuned \
+					--force_restart evaluation \
+					--csv_base_dir "$(CSV_BASE_DIR)" \
 				$(DEVICE_FLAG) \
 				$(WANDB_FLAG) \
 				--detection.gnn_training.seed $$seed \

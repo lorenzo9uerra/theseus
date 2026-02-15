@@ -24,10 +24,10 @@ PROJECT_ROOT := $(abspath $(MAGIC_ROOT)/../..)
 DATA_DIR       ?= $(PROJECT_ROOT)/data/DARPA
 GROUND_TRUTH_DIR ?= $(PROJECT_ROOT)/ground_truth/reapr-ground-truth/darpa-tc-engagement3
 
-DATASETS := cadets fivedirections theia trace
-SEEDS    := 71 83 232 441 915
-DEVICE   ?= -1
-WANDB    ?=
+	DATASETS := cadets fivedirections theia trace
+	SEEDS    := 71 83 232 441 915
+	DEVICE   ?= 0
+	WANDB    ?=
 
 # Build --wandb flag when WANDB is set (e.g. make train WANDB=1)
 ifdef WANDB

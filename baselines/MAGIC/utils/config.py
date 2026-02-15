@@ -5,7 +5,7 @@ def build_args():
     parser = argparse.ArgumentParser(description="MAGIC")
     parser.add_argument("--dataset", type=str, default="wget")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--device", type=int, default=-1)
+    parser.add_argument("--device", type=int, default=0)
     parser.add_argument("--lr", type=float, default=0.0018, help="learning rate")
     parser.add_argument("--weight_decay", type=float, default=5e-4, help="weight decay")
     parser.add_argument(

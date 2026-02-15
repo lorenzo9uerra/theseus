@@ -132,11 +132,13 @@ uv run python scripts/aggregate_results.py
 | `CSV_BASE_DIR` | `PROJECT_ROOT/data/DARPA` | Raw data location |
 | `DATASETS` | `CADETS_E3 FIVEDIRECTIONS_E3 THEIA_E3 TRACE_E3` | Datasets to process |
 | `SEEDS` | `111 333 828 0 433` | Seeds for GNN training |
-| `DEVICE` | *(unset = CPU)* | Set to GPU id for GPU |
+| `DEVICE` | *(unset)* | Optional: set `CUDA_VISIBLE_DEVICES` (e.g., `DEVICE=0`) |
+| `USE_CPU` | `0` | Set to `1` to force CPU (`--cpu`) |
 | `WANDB` | *(unset)* | Set to 1 to enable Weights & Biases logging |
 
 ```bash
 make orthrus DATASETS="CADETS_E3" SEEDS="111 333" DEVICE=0 WANDB=1
+make orthrus DATASETS="CADETS_E3" SEEDS="111 333" USE_CPU=1 WANDB=1
 ```
 
 ## Troubleshooting

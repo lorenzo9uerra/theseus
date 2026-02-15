@@ -19,8 +19,24 @@ warnings.filterwarnings("ignore")
 _MAGIC_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
+def _resolve_device(device_arg: int) -> torch.device:
+    if device_arg < 0:
+        return torch.device("cpu")
+    if not torch.cuda.is_available():
+        print("Warning: CUDA not available. Falling back to CPU.")
+        return torch.device("cpu")
+    device_count = torch.cuda.device_count()
+    if device_count and device_arg >= device_count:
+        print(
+            f"Warning: requested cuda:{device_arg} but only {device_count} CUDA device(s) available. "
+            "Using cuda:0."
+        )
+        device_arg = 0
+    return torch.device(f"cuda:{device_arg}")
+
+
 def main(main_args):
-    device = main_args.device if main_args.device >= 0 else "cpu"
+    device = _resolve_device(main_args.device)
     dataset_name = main_args.dataset
     main_args.num_hidden = 64
     main_args.max_epoch = 200

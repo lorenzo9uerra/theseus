@@ -93,7 +93,7 @@ $(MAGIC_ROOT)/data/$(1)/metadata.json:
 	@echo "=== Parsing $(1) ==="
 	@test -d "$(DATA_DIR)/$($(1)_RAW)" || (echo "ERROR: $(DATA_DIR)/$($(1)_RAW) not found" && exit 1)
 	@test -f "$(GROUND_TRUTH_DIR)/$($(1)_GT)" || (echo "ERROR: $(GROUND_TRUTH_DIR)/$($(1)_GT) not found" && exit 1)
-	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/utils/data_parser_daily.py \
+	@cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/utils/data_parser_daily.py \
 		--dataset $(1) \
 		--data_dir "$(DATA_DIR)/$($(1)_RAW)" \
 		--ground_truth "$(GROUND_TRUTH_DIR)/$($(1)_GT)" \
@@ -110,7 +110,7 @@ $(foreach ds,$(DATASETS),$(eval $(call parse_dataset_rule,$(ds))))
 define train_rule
 $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt: | $(MAGIC_ROOT)/data/$(1)/metadata.json
 	@echo "=== Training $(1) seed=$(2) device=$(DEVICE) ==="
-	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/train.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG)
+	@cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/train.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG)
 endef
 
 $(foreach ds,$(DATASETS),$(foreach s,$(SEEDS),$(eval $(call train_rule,$(ds),$(s)))))
@@ -147,7 +147,7 @@ define eval_rule
 $(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/data/$(1)/metadata.json $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt
 	@mkdir -p $(RESULT_DIR)
 	@echo "=== Evaluating $(1) seed=$(2) ==="
-	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \
+	@cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \
 		> "$(RESULT_DIR)/$(1)_seed$(2).log.tmp" 2>&1 \
 		&& mv "$(RESULT_DIR)/$(1)_seed$(2).log.tmp" "$(RESULT_DIR)/$(1)_seed$(2).log"
 	@tail -10 "$(RESULT_DIR)/$(1)_seed$(2).log"

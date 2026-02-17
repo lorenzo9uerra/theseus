@@ -21,13 +21,13 @@ SHELL := /bin/bash
 MAGIC_ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 PROJECT_ROOT := $(abspath $(MAGIC_ROOT)/../..)
 
-DATA_DIR       ?= $(PROJECT_ROOT)/data/DARPA
+DATA_DIR         ?= $(PROJECT_ROOT)/data/DARPA
 GROUND_TRUTH_DIR ?= $(PROJECT_ROOT)/ground_truth/reapr-ground-truth/darpa-tc-engagement3
 
-	DATASETS := cadets fivedirections theia trace
-	SEEDS    := 71 83 232 441 915
-	DEVICE   ?= -1
-	WANDB    ?=
+DATASETS := cadets fivedirections theia trace
+SEEDS    := 71 83 232 441 915
+DEVICE   ?= -1
+WANDB    ?=
 
 # Build --wandb flag when WANDB is set (e.g. make train WANDB=1)
 ifdef WANDB
@@ -108,7 +108,7 @@ $(foreach ds,$(DATASETS),$(eval $(call parse_dataset_rule,$(ds))))
 
 # One checkpoint per (dataset, seed)
 define train_rule
-$(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt: $(MAGIC_ROOT)/data/$(1)/metadata.json
+$(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt: | $(MAGIC_ROOT)/data/$(1)/metadata.json
 	@echo "=== Training $(1) seed=$(2) device=$(DEVICE) ==="
 	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/train.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG)
 endef
@@ -144,7 +144,7 @@ train-all-seeds: verify-env data
 RESULT_DIR := $(MAGIC_ROOT)/results
 
 define eval_rule
-$(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt
+$(RESULT_DIR)/$(1)_seed$(2).log: $(MAGIC_ROOT)/data/$(1)/metadata.json $(MAGIC_ROOT)/checkpoints/checkpoint-$(1)-seed$(2).pt
 	@mkdir -p $(RESULT_DIR)
 	@echo "=== Evaluating $(1) seed=$(2) ==="
 	cd $(MAGIC_ROOT) && uv run python $(MAGIC_ROOT)/eval.py --dataset $(1) --seed $(2) --device $(DEVICE) $(WANDB_FLAG) \

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 if [ ! -f "main.py" ]; then
     echo "Run this script from the project root directory."
@@ -16,64 +16,56 @@ CKPT_DIR="checkpoints/theseus"
 RESULT_DIR="results"
 mkdir -p "$RESULT_DIR"
 
+WANDB_FLAG=()
+if [ "${WANDB:-0}" = "1" ]; then
+    WANDB_FLAG=(--wandb)
+fi
+
+run_eval() {
+    local dataset="$1"
+    local seed="$2"
+    local ckpt="$3"
+
+    echo "Running ${dataset} (Seed: ${seed})..."
+
+    if [ ! -f "${ckpt}" ]; then
+        echo "ERROR: checkpoint not found: ${ckpt}"
+        echo "Make sure you extracted 'theseus_artifacts.zip' into the project root:"
+        echo "  unzip -o theseus_artifacts.zip -d ."
+        exit 1
+    fi
+
+    local log_file="${RESULT_DIR}/theseus_${dataset}_seed${seed}.log"
+    uv run main.py "${dataset}" \
+        --seed "${seed}" \
+        "${WANDB_FLAG[@]}" \
+        --test \
+        --checkpoint "${ckpt}" \
+        > "${log_file}.tmp" 2>&1 \
+    && mv "${log_file}.tmp" "${log_file}" \
+    || { echo "FAILED: ${dataset} seed=${seed}"; tail -80 "${log_file}.tmp" || true; exit 1; }
+
+    tail -39 "${log_file}"
+}
+
 # 1. CADETS_E3
 for SEED in "${COMMON_SEEDS[@]}"; do
-    echo "Running CADETS_E3 (Seed: $SEED)..."
-    LOG_FILE="$RESULT_DIR/theseus_CADETS_E3_seed${SEED}.log"
-    uv run main.py CADETS_E3 \
-        --seed "$SEED" \
-        --wandb \
-        --test \
-        --checkpoint "$CKPT_DIR/checkpoint_theseus_cadets_e3_seed_${SEED}_paper.pt" \
-        > "${LOG_FILE}.tmp" 2>&1 \
-    && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
-    || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -20 "${LOG_FILE}"
+    run_eval "CADETS_E3" "${SEED}" "$CKPT_DIR/checkpoint_theseus_cadets_e3_seed_${SEED}_paper.pt"
 done
 
 # 2. FIVEDIRECTIONS_E3
 for SEED in "${COMMON_SEEDS[@]}"; do
-    echo "Running FIVEDIRECTIONS_E3 (Seed: $SEED)..."
-    LOG_FILE="$RESULT_DIR/theseus_FIVEDIRECTIONS_E3_seed${SEED}.log"
-    uv run main.py FIVEDIRECTIONS_E3 \
-        --seed "$SEED" \
-        --wandb \
-        --test \
-        --checkpoint "$CKPT_DIR/checkpoint_theseus_fivedirections_e3_seed_${SEED}_paper.pt" \
-        > "${LOG_FILE}.tmp" 2>&1 \
-    && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
-    || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -20 "${LOG_FILE}"
+    run_eval "FIVEDIRECTIONS_E3" "${SEED}" "$CKPT_DIR/checkpoint_theseus_fivedirections_e3_seed_${SEED}_paper.pt"
 done
 
 # 3. THEIA_E3
 for SEED in "${COMMON_SEEDS[@]}"; do
-    echo "Running THEIA_E3 (Seed: $SEED)..."
-    LOG_FILE="$RESULT_DIR/theseus_THEIA_E3_seed${SEED}.log"
-    uv run main.py THEIA_E3 \
-        --seed "$SEED" \
-        --wandb \
-        --test \
-        --checkpoint "$CKPT_DIR/checkpoint_theseus_theia_e3_seed_${SEED}_paper.pt" \
-        > "${LOG_FILE}.tmp" 2>&1 \
-    && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
-    || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -20 "${LOG_FILE}"
+    run_eval "THEIA_E3" "${SEED}" "$CKPT_DIR/checkpoint_theseus_theia_e3_seed_${SEED}_paper.pt"
 done
 
 # 4. TRACE_E3
 for SEED in "${COMMON_SEEDS[@]}"; do
-    echo "Running TRACE_E3 (Seed: $SEED)..."
-    LOG_FILE="$RESULT_DIR/theseus_TRACE_E3_seed${SEED}.log"
-    uv run main.py TRACE_E3 \
-        --seed "$SEED" \
-        --wandb \
-        --test \
-        --checkpoint "$CKPT_DIR/checkpoint_theseus_trace_e3_seed_${SEED}_paper.pt" \
-        > "${LOG_FILE}.tmp" 2>&1 \
-    && mv "${LOG_FILE}.tmp" "${LOG_FILE}" \
-    || { rm -f "${LOG_FILE}.tmp"; exit 1; }
-    tail -20 "${LOG_FILE}"
+    run_eval "TRACE_E3" "${SEED}" "$CKPT_DIR/checkpoint_theseus_trace_e3_seed_${SEED}_paper.pt"
 done
 
 echo "All reproduction experiments finished."

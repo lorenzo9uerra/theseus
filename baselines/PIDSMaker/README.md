@@ -34,10 +34,36 @@ PROJECT_ROOT/
 └── baselines/PIDSMaker/              # <- you are here
     ├── Makefile                       # One-command reproducibility
     ├── pyproject.toml                 # uv project definition + package metadata
-	    ├── .python-version                # Pins Python 3.9
-	    ├── ground_truth -> ../../ground_truth  # Symlink (must exist)
-	    ├── artifacts/                     # Generated: pipeline intermediate files
-	    └── results/                       # Generated: evaluation logs
+    ├── .python-version                # Pins Python 3.9
+    ├── ground_truth -> ../../ground_truth  # Symlink (must exist)
+    ├── artifacts/                     # Generated: pipeline intermediate files
+    └── results/                       # Generated: evaluation logs
+```
+
+## Using Zenodo Artifacts (Evaluation-only)
+
+If you downloaded `pidsmaker_artifacts.zip` from our Zenodo reproducibility repository (DOI: https://doi.org/10.5281/zenodo.18489504), you can reproduce the evaluation without re-running the full PIDSMaker pipeline.
+
+From `PROJECT_ROOT/`:
+
+```bash
+unzip -o pidsmaker_artifacts.zip -d baselines/PIDSMaker/
+```
+
+Then, from `baselines/PIDSMaker/`:
+
+```bash
+make setup
+ln -sf ../../data data
+ln -sf ../../ground_truth ground_truth
+
+make eval            # Orthrus + Velox, eval-only (skip training)
+```
+
+If the extracted bundle already contains `results/`, you can skip `make eval` and aggregate directly:
+
+```bash
+uv run python scripts/aggregate_results.py
 ```
 
 ## Quick Start
@@ -93,6 +119,7 @@ make velox            # All datasets, all seeds
 
 **Re-evaluate only (skip training):**
 ```bash
+make eval            # Orthrus + Velox
 make eval-orthrus
 make eval-velox
 ```

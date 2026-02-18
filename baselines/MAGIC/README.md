@@ -27,10 +27,33 @@ PROJECT_ROOT/
 └── baselines/MAGIC/                   # <- you are here
     ├── Makefile                       # One-command reproducibility
     ├── pyproject.toml                 # uv project definition
-	    ├── .python-version                # Pins Python 3.9
-	    ├── data/                          # Generated: processed DGL graphs
-	    ├── checkpoints/                   # Generated: trained model weights
-	    └── results/                       # Generated: evaluation logs
+    ├── .python-version                # Pins Python 3.9
+    ├── data/                          # Generated: processed DGL graphs
+    ├── checkpoints/                   # Generated: trained model weights
+    └── results/                       # Generated: evaluation logs
+```
+
+## Using Zenodo Artifacts (Evaluation-only)
+
+If you downloaded `magic_artifacts.zip` from our Zenodo reproducibility repository (DOI: https://doi.org/10.5281/zenodo.18489504), you can reproduce the evaluation without re-parsing data or re-training the model.
+
+From `PROJECT_ROOT/`:
+
+```bash
+unzip -o magic_artifacts.zip -d baselines/MAGIC/
+```
+
+Then, from `baselines/MAGIC/`:
+
+```bash
+make setup
+make eval
+```
+
+If the extracted bundle already contains `results/`, you can skip `make eval` and aggregate directly:
+
+```bash
+uv run python utils/aggregate_results.py
 ```
 
 ## Quick Start (One Command)
@@ -45,10 +68,11 @@ make setup
 make all
 ```
 
-	This will:
-	1. Parse the raw DARPA datasets into daily DGL graphs (-> `data/<dataset>/`).
-	3. Train MAGIC on each dataset with seeds {71, 83, 232, 441, 915} (-> `checkpoints/`).
-	4. Evaluate every checkpoint and save logs (-> `results/`).
+This will:
+
+1. Parse the raw DARPA datasets into daily DGL graphs (-> `data/<dataset>/`).
+2. Train MAGIC on each dataset with seeds {71, 83, 232, 441, 915} (-> `checkpoints/`).
+3. Evaluate every checkpoint and save logs (-> `results/`).
 
 ## Step-by-Step Reproduction
 

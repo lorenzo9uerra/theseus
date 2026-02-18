@@ -6,6 +6,7 @@
 #   make orthrus            Train & evaluate Orthrus (all seeds)
 #   make velox              Train & evaluate Velox (all seeds)
 #   make all                Run both Orthrus and Velox
+#   make eval               Eval-only for Orthrus + Velox (all seeds)
 #   make eval-orthrus       Eval-only for Orthrus (all seeds)
 #   make eval-velox         Eval-only for Velox (all seeds)
 #
@@ -58,9 +59,10 @@ RESULT_DIR := $(PIDS_ROOT)/results
 # ---------- Targets ----------
 
 .PHONY: all setup verify-env verify-links orthrus velox \
-        eval-orthrus eval-velox clean help
+        eval eval-orthrus eval-velox clean help
 
 all: orthrus velox
+eval: eval-orthrus eval-velox
 
 help:
 	@echo "PIDSMaker Artifact Evaluation"
@@ -70,6 +72,7 @@ help:
 	@echo "  make orthrus        - Full Orthrus pipeline (all datasets, all seeds)"
 	@echo "  make velox          - Full Velox pipeline (all datasets, all seeds)"
 	@echo "  make all            - Run both Orthrus and Velox"
+	@echo "  make eval           - Re-evaluate Orthrus + Velox (skip training)"
 	@echo "  make eval-orthrus   - Re-evaluate Orthrus only (skip training)"
 	@echo "  make eval-velox     - Re-evaluate Velox only (skip training)"
 	@echo "  make clean          - Remove result logs"

@@ -22,10 +22,12 @@ Download the following two archives from Zenodo:
 
 * **Processed Datasets:** Contains the Parquet and CSV files derived from the raw JSON logs. We highly recommend using the Parquet version for faster loading times and stricter type handling.
     * URL: [https://doi.org/10.5281/zenodo.18450778](https://doi.org/10.5281/zenodo.18450778)
+    * Files: `DARPA-TC-E3-Parquet.zip`, `DARPA-TC-E3-CSV.zip`
 
 
-* **Reproducibility Artifacts:** Contains the graph construction cache, Theseus model checkpoints, and Word2Vec embeddings required to reproduce the exact results reported for the Theseus model without retraining.
+* **Reproducibility Artifacts:** Contains the cache, model checkpoints, Word2Vec embeddings and logs required to reproduce the exact results reported for each model without retraining.
     * URL: [https://doi.org/10.5281/zenodo.18489504](https://doi.org/10.5281/zenodo.18489504)
+    * Files: `theseus_artifacts.zip`, `magic_artifacts.zip`, `pidsmaker_artifacts.zip`
 
 
 
@@ -35,10 +37,16 @@ Place the downloaded `.zip` files in the project root and extract them.
 
 ```bash
 # Extracts the DARPA/ folder (with its subdirectories) into the data/ directory
-unzip DARPA-TC-E3-Parquet.zip -d data/
+unzip -o DARPA-TC-E3-Parquet.zip -d data/
 
-# Extracts 'checkpoints/' and 'cache/' folders
-unzip theseus_artifacts.zip
+# Theseus: extracts 'checkpoints/' and 'cache/' into the project root
+unzip -o theseus_artifacts.zip -d .
+
+# MAGIC baseline: extracts 'data/', 'checkpoints/', 'results/' into baselines/MAGIC/
+unzip -o magic_artifacts.zip -d baselines/MAGIC/
+
+# Orthrus/Velox baselines (PIDSMaker): extracts 'artifacts/' and 'results/' into baselines/PIDSMaker/
+unzip -o pidsmaker_artifacts.zip -d baselines/PIDSMaker/
 ```
 
 **Ground Truth Data**
@@ -143,7 +151,23 @@ Reproduction instructions for the baseline systems are provided in their respect
 * **Magic:** See [baselines/MAGIC/](baselines/MAGIC/)
 * **Orthrus and Velox:** See [baselines/PIDSMaker/](baselines/PIDSMaker/)
 
-Both baselines use conda for dependency management and include Makefiles for one-command reproducibility.
+Both baselines use `uv` for dependency management and include Makefiles for one-command reproducibility.
+
+After extracting `magic_artifacts.zip` / `pidsmaker_artifacts.zip`, you can re-run evaluation-only (no training) and aggregate the logs:
+
+```bash
+cd baselines/MAGIC
+make setup
+make eval
+uv run python utils/aggregate_results.py
+
+cd ../PIDSMaker
+make setup
+ln -sf ../../data data
+ln -sf ../../ground_truth ground_truth
+make eval
+uv run python scripts/aggregate_results.py
+```
 
 ## Development
 

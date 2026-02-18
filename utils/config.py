@@ -1,8 +1,10 @@
+import argparse
 import contextlib
 import os
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, cast
 
 import torch
 import yaml
@@ -17,18 +19,18 @@ class ConfigError(Exception):
 class NestedConfig:
     """Enables dot-notation access for nested dictionaries."""
 
-    def __init__(self, data: dict[str, any]):
+    def __init__(self, data: dict[str, Any]):
         for key, value in data.items():
             if isinstance(value, dict):
                 setattr(self, key, NestedConfig(value))
             else:
                 setattr(self, key, value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return getattr(self, key, None)
 
-    def to_dict(self) -> dict[str, any]:
-        result = {}
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {}
         for key, value in self.__dict__.items():
             result[key] = value.to_dict() if isinstance(value, NestedConfig) else value
         return result
@@ -38,10 +40,24 @@ class NestedConfig:
 class Config:
     """Merges command line arguments and YAML configuration files."""
 
-    config_data: dict[str, any] = field(default_factory=dict)
+    config_data: dict[str, Any] = field(default_factory=dict)
+    dataset: str = ""
+    seed: int = 42
+    cpu: bool = False
+    cache_dir: str = "./cache/"
+    outputs_dir: str = "./outputs"
+    checkpoint_dir: str = "./checkpoints"
+    force_restart: bool = False
+    test: bool = False
+    checkpoint: str | None = None
+    config: str | None = None
+    data_dir: str = "./data/DARPA"
+    device: str | None = None
+    model: str = "theseus"
+    dataset_info: NestedConfig | None = None
 
     @classmethod
-    def from_args(cls, args) -> "Config":
+    def from_args(cls, args: argparse.Namespace) -> "Config":
         """Builds Config from parsed CLI arguments, defaults, and external YAMLs."""
         config = cls()
         config.model = "theseus"
@@ -51,15 +67,11 @@ class Config:
             config_key = key.replace("-", "_")
             setattr(config, config_key, value)
 
-        # Auto-detect device if not explicitly set
-        if not hasattr(config, "device"):
-            config.device = (
-                "cpu"
-                if getattr(config, "cpu", False)
-                else ("cuda" if torch.cuda.is_available() else "cpu")
-            )
-        elif getattr(config, "cpu", False):
+        # Auto-detect device unless forced to CPU
+        if getattr(config, "cpu", False):
             config.device = "cpu"
+        elif config.device is None:
+            config.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # Load external configurations and clean cache if needed
         config._setup_dataset_config()
@@ -68,34 +80,45 @@ class Config:
 
         return config
 
-    def _setup_dataset_config(self):
+    def _setup_dataset_config(self) -> None:
         """Loads dataset parameters from `configs/datasets/*.yml`."""
         configs_dir = Path(__file__).parent.parent / "configs" / "datasets"
-        dataset_configs = {}
+        dataset_configs: dict[str, dict[str, Any]] = {}
 
         for yaml_file in configs_dir.glob("*.yml"):
             with open(yaml_file) as f:
-                if file_configs := yaml.safe_load(f):
-                    dataset_configs.update(file_configs)
+                file_configs = yaml.safe_load(f)
+                if not file_configs:
+                    continue
+                if not isinstance(file_configs, dict):
+                    raise ConfigError(
+                        f"Expected a mapping in dataset config {yaml_file}, got {type(file_configs).__name__}"
+                    )
+                dataset_configs.update(cast(dict[str, dict[str, Any]], file_configs))
 
         if self.dataset not in dataset_configs:
             raise KeyError(
                 f"Dataset '{self.dataset}' not found. Available: {list(dataset_configs.keys())}"
             )
 
-        self.dataset_info = NestedConfig(dataset_configs[self.dataset])
+        self.dataset_info = NestedConfig(dataset_configs[str(self.dataset)])
 
-    def _load_yaml_configs(self):
+    def _load_yaml_configs(self) -> None:
         """Loads YAML config. Priority: Custom Path > Tuned Config > Default Model Config."""
         custom_config = getattr(self, "config", None)
 
         if custom_config:
-            config_path = Path(custom_config)
+            config_path = Path(str(custom_config))
             if not config_path.exists():
                 raise ConfigError(f"Custom configuration file not found: {config_path}")
             print(f"Loading custom configuration from: {config_path}")
             with open(config_path) as file:
-                self.config_data = yaml.safe_load(file) or {}
+                loaded = yaml.safe_load(file) or {}
+                if not isinstance(loaded, dict):
+                    raise ConfigError(
+                        f"Custom configuration must be a mapping, got {type(loaded).__name__}: {config_path}"
+                    )
+                self.config_data = cast(dict[str, Any], loaded)
         else:
             model_config_path = (
                 f"./configs/tuned/{self.model}_{self.dataset.lower()}.yml"
@@ -104,11 +127,21 @@ class Config:
             if os.path.exists(model_config_path):
                 print(f"Loading configuration from: {model_config_path}")
                 with open(model_config_path) as file:
-                    self.config_data = yaml.safe_load(file)
+                    loaded = yaml.safe_load(file) or {}
+                    if not isinstance(loaded, dict):
+                        raise ConfigError(
+                            f"Model configuration must be a mapping, got {type(loaded).__name__}: {model_config_path}"
+                        )
+                    self.config_data = cast(dict[str, Any], loaded)
             elif os.path.exists(f"./configs/models/{self.model}.yml"):
                 print("Model-specific config not found. Loading default configuration.")
                 with open(f"./configs/models/{self.model}.yml") as file:
-                    self.config_data = yaml.safe_load(file)
+                    loaded = yaml.safe_load(file) or {}
+                    if not isinstance(loaded, dict):
+                        raise ConfigError(
+                            f"Model configuration must be a mapping, got {type(loaded).__name__}: {self.model}"
+                        )
+                    self.config_data = cast(dict[str, Any], loaded)
             else:
                 raise ConfigError(
                     f"Model configuration file not found: {model_config_path}"
@@ -116,7 +149,7 @@ class Config:
 
         self._create_nested_attributes()
 
-    def _create_nested_attributes(self):
+    def _create_nested_attributes(self) -> None:
         """Converts the raw config dictionary into object attributes."""
         if not self.config_data:
             return
@@ -127,7 +160,7 @@ class Config:
             else:
                 setattr(self, key, value)
 
-    def override_from_args(self, args):
+    def override_from_args(self, args: argparse.Namespace) -> None:
         """Updates configuration with non-null CLI arguments, excluding internal flags."""
         for param, value in vars(args).items():
             if param in [
@@ -146,9 +179,9 @@ class Config:
                     self.config_data[param] = value
                 print(f"Overriding config.{param} = {value}")
 
-    def to_dict(self) -> dict[str, any]:
+    def to_dict(self) -> dict[str, Any]:
         """Returns a dictionary representation of the current configuration state."""
-        result = {}
+        result: dict[str, Any] = {}
         result.update(self.config_data)
 
         for key, value in self.__dict__.items():

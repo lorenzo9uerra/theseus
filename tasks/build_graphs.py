@@ -297,7 +297,7 @@ def train_word2vec(node_metadata, train_nodes, config):
         cache_components.append("fused")
     if config.bidirectional_edges:
         cache_components.append("bidir")
-    if config.include_contaminated:
+    if config.exclude_contaminated_from_training:
         cache_components.append("contam")
 
     base_filename = "_".join(cache_components)
@@ -1105,13 +1105,12 @@ def build_graphs(config):
     )
     if cached_graphs and cached_ground_truth:
         filtered_ground_truth = _filter_ground_truth(cached_ground_truth)
-        include_contaminated = config.include_contaminated
         all_malicious_nodes = _get_malicious_nodes(
-            filtered_ground_truth, include_contaminated
+            filtered_ground_truth, config.exclude_contaminated_from_training
         )
 
         log(
-            f"Using include_contaminated={include_contaminated}: {len(all_malicious_nodes)} malicious nodes"
+            f"exclude_contaminated_from_training={config.exclude_contaminated_from_training}: {len(all_malicious_nodes)} malicious nodes"
         )
         _relabel_graphs(cached_graphs, all_malicious_nodes)
         return cached_graphs, filtered_ground_truth
@@ -1124,12 +1123,11 @@ def build_graphs(config):
         raise ValueError(f"Failed to load ground truth: {exc}") from exc
 
     filtered_ground_truth = _filter_ground_truth(ground_truth)
-    include_contaminated = config.include_contaminated
     all_malicious_nodes = _get_malicious_nodes(
-        filtered_ground_truth, include_contaminated
+        filtered_ground_truth, config.exclude_contaminated_from_training
     )
     log(
-        f"Using include_contaminated={include_contaminated}: {len(all_malicious_nodes)} malicious nodes"
+        f"exclude_contaminated_from_training={config.exclude_contaminated_from_training}: {len(all_malicious_nodes)} malicious nodes"
     )
 
     node_metadata = fetch_node_metadata(config)

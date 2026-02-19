@@ -111,7 +111,9 @@ To retrain all models from scratch across all seeds used in the paper:
 ./scripts/retrain_from_scratch.sh
 ```
 
-This will train on all four datasets (CADETS_E3, FIVEDIRECTIONS_E3, THEIA_E3, TRACE_E3) with seeds 65129, 923457, 56604, 9382, and 58371. Results are logged to Weights & Biases.
+This will train on all four datasets (CADETS_E3, FIVEDIRECTIONS_E3, THEIA_E3, TRACE_E3) with seeds 65129, 923457, 56604, 9382, and 58371.
+
+Logs are written to `results/theseus_<dataset>_seed<seed>.log`. To also log to Weights & Biases, set `WANDB=1` before running the script.
 
 If you prefer to retrain a single configuration manually, set the Python hash seed to ensure deterministic vocabulary building:
 

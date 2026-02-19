@@ -19,7 +19,7 @@ num_layers: 2
 window_size_minutes: 15 # Snapshot window size in minutes
 fuse_edge: true # Whether to fuse multiple consecutive edges between same node pair
 max_nodes: 10000 # Sample subgraphs to prevent OOM in Transformer
-exclude_contaminated_from_training: true # If true: contaminated nodes are labeled malicious (causal scope) and excluded from training/threshold selection
+exclude_malicious_from_training: true # If true, train only on benign-labeled nodes (y==0) within the training split; labels remain causal (attack+contaminated) for thresholding/eval
 bidirectional_edges: true # Whether to treat edges as bidirectional
 graph_batch_size: 2 # Number of graphs per batch during training
 use_fused_edge_count: true # Whether to use fused edge count as edge feature

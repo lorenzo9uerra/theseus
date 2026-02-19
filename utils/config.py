@@ -55,6 +55,7 @@ class Config:
     device: str | None = None
     model: str = "theseus"
     dataset_info: NestedConfig | None = None
+    exclude_malicious_from_training: bool = True
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> "Config":
@@ -65,6 +66,8 @@ class Config:
         # Map CLI arguments to config attributes
         for key, value in vars(args).items():
             config_key = key.replace("-", "_")
+            if value is None:
+                continue
             setattr(config, config_key, value)
 
         # Auto-detect device unless forced to CPU

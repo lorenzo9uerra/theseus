@@ -297,28 +297,29 @@ def train_word2vec(node_metadata, train_nodes, config):
         cache_components.append("fused")
     if config.bidirectional_edges:
         cache_components.append("bidir")
-    if config.exclude_contaminated_from_training:
-        cache_components.append("contam")
 
     base_filename = "_".join(cache_components)
+
+    for filename in (base_filename, f"{base_filename}_contam"):
+        path_model_path = os.path.join(word2vec_dir, f"{filename}_path.model")
+        command_model_path = os.path.join(word2vec_dir, f"{filename}_command.model")
+        netflow_model_path = os.path.join(word2vec_dir, f"{filename}_netflow.model")
+        if (
+            os.path.exists(path_model_path)
+            and os.path.exists(command_model_path)
+            and os.path.exists(netflow_model_path)
+            and not config.force_restart
+        ):
+            log(f"Loading cached Word2Vec models from {word2vec_dir}")
+            return {
+                "path": Word2Vec.load(path_model_path),
+                "command": Word2Vec.load(command_model_path),
+                "netflow": Word2Vec.load(netflow_model_path),
+            }
 
     path_model_path = os.path.join(word2vec_dir, f"{base_filename}_path.model")
     command_model_path = os.path.join(word2vec_dir, f"{base_filename}_command.model")
     netflow_model_path = os.path.join(word2vec_dir, f"{base_filename}_netflow.model")
-
-    # Load cached models if they exist
-    if (
-        os.path.exists(path_model_path)
-        and os.path.exists(command_model_path)
-        and os.path.exists(netflow_model_path)
-        and not config.force_restart
-    ):
-        log(f"Loading cached Word2Vec models from {word2vec_dir}")
-        return {
-            "path": Word2Vec.load(path_model_path),
-            "command": Word2Vec.load(command_model_path),
-            "netflow": Word2Vec.load(netflow_model_path),
-        }
 
     log("Training three specialized Word2Vec models on training set nodes...")
 
@@ -1026,16 +1027,14 @@ def _filter_ground_truth(ground_truth):
     return filtered
 
 
-def _get_malicious_nodes(ground_truth, include_contaminated=False):
-    """Extract malicious node IDs from ground truth (attack + optionally contaminated)."""
+def _get_malicious_nodes(ground_truth):
+    """Extract malicious node IDs from ground truth (attack + contaminated)."""
     all_malicious_nodes = set()
     for attack_id, attack_metadata in ground_truth.items():
         if attack_id in EXCLUDED_ATTACK_CLASSES:
             continue
-        if "nids" in attack_metadata:
-            all_malicious_nodes.update(attack_metadata["nids"])
-        if include_contaminated and "contaminated_nids" in attack_metadata:
-            all_malicious_nodes.update(attack_metadata["contaminated_nids"])
+        all_malicious_nodes.update(attack_metadata.get("nids", []) or [])
+        all_malicious_nodes.update(attack_metadata.get("contaminated_nids", []) or [])
     return all_malicious_nodes
 
 
@@ -1105,12 +1104,10 @@ def build_graphs(config):
     )
     if cached_graphs and cached_ground_truth:
         filtered_ground_truth = _filter_ground_truth(cached_ground_truth)
-        all_malicious_nodes = _get_malicious_nodes(
-            filtered_ground_truth, config.exclude_contaminated_from_training
-        )
+        all_malicious_nodes = _get_malicious_nodes(filtered_ground_truth)
 
         log(
-            f"exclude_contaminated_from_training={config.exclude_contaminated_from_training}: {len(all_malicious_nodes)} malicious nodes"
+            f"Label scope: causal (attack + contaminated): {len(all_malicious_nodes)} malicious nodes"
         )
         _relabel_graphs(cached_graphs, all_malicious_nodes)
         return cached_graphs, filtered_ground_truth
@@ -1123,11 +1120,9 @@ def build_graphs(config):
         raise ValueError(f"Failed to load ground truth: {exc}") from exc
 
     filtered_ground_truth = _filter_ground_truth(ground_truth)
-    all_malicious_nodes = _get_malicious_nodes(
-        filtered_ground_truth, config.exclude_contaminated_from_training
-    )
+    all_malicious_nodes = _get_malicious_nodes(filtered_ground_truth)
     log(
-        f"exclude_contaminated_from_training={config.exclude_contaminated_from_training}: {len(all_malicious_nodes)} malicious nodes"
+        f"Label scope: causal (attack + contaminated): {len(all_malicious_nodes)} malicious nodes"
     )
 
     node_metadata = fetch_node_metadata(config)

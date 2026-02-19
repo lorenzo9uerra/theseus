@@ -93,17 +93,21 @@ def train(config, train_data, val_data, test_data):
 
         model.train()
         for batch in train_loader:
-            benign_mask = batch.y == 0
-            if not benign_mask.any():
-                continue
+            if config.exclude_malicious_from_training:
+                benign_mask = batch.y == 0
+                if not benign_mask.any():
+                    continue
+                benign_indices = torch.where(benign_mask)[0]
+                batch_train = batch.subgraph(benign_indices)
+            else:
+                batch_train = batch
 
-            benign_indices = torch.where(benign_mask)[0]
-            batch_benign = batch.subgraph(benign_indices).to(device=config.device)
+            batch_train = batch_train.to(device=config.device)
 
             # Process nodes only (index 0 in NODE_TYPES one-hot encoding)
-            process_mask = batch_benign.x[:, 0] == 1
+            process_mask = batch_train.x[:, 0] == 1
 
-            outputs, encoded_target = model(batch_benign)
+            outputs, encoded_target = model(batch_train)
 
             if process_mask.any():
                 loss = model.loss(

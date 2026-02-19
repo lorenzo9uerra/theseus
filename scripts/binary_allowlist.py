@@ -46,6 +46,7 @@ class DatasetStats:
 
     # Node counts
     n_test_process: int = 0
+    n_excluded: int = 0
     n_attack: int = 0
     n_contaminated: int = 0
     n_flagged: int = 0
@@ -128,20 +129,24 @@ def compute_classification_metrics(
 
 
 def load_ground_truth(
-    dataset_name: str, ground_truth_dir: Path
-) -> tuple[set[str], set[str]]:
+    dataset_name: str,
+    ground_truth_dir: Path,
+    excluded_attack_chains: set[str] | None = None,
+) -> tuple[set[str], set[str], set[str]]:
     """
     Parses ground truth CSV to retrieve Attack and Contaminated UUIDs.
-    Returns: (attack_uuids, contaminated_uuids)
+    Returns: (attack_uuids, contaminated_uuids, excluded_uuids)
     """
     gt_path = ground_truth_dir / f"{dataset_name.lower()}_labels.csv"
 
     if not gt_path.exists():
         logger.warning(f"Ground truth file missing: {gt_path}")
-        return set(), set()
+        return set(), set(), set()
 
     attack_uuids = set()
     contaminated_uuids = set()
+    excluded_uuids = set()
+    excluded_attack_chains = excluded_attack_chains or set()
 
     with open(gt_path, newline="") as f:
         reader = csv.reader(f)
@@ -157,18 +162,22 @@ def load_ground_truth(
             ):
                 continue
 
+            chain = cleaned_row[0]
             uuid = cleaned_row[1]
             label = cleaned_row[-1].lower()
 
             if not uuid:
                 continue
 
+            if chain in excluded_attack_chains:
+                excluded_uuids.add(uuid)
+
             if label == "attack":
                 attack_uuids.add(uuid)
             elif label == "contaminated":
                 contaminated_uuids.add(uuid)
 
-    return attack_uuids, contaminated_uuids
+    return attack_uuids, contaminated_uuids, excluded_uuids
 
 
 def load_process_metadata(
@@ -302,28 +311,35 @@ def analyze_dataset(
     novel_test_cmds = len(test_cmds - train_cmds)
     novel_test_paths = len(test_paths - train_paths)
 
-    attack_uuids, contam_uuids = load_ground_truth(
-        dataset_name.split("_")[0], ground_truth_dir
+    excluded_attack_chains = set(config.get("excluded_attack_chains", []) or [])
+    attack_uuids, contam_uuids, excluded_uuids = load_ground_truth(
+        dataset_name.split("_")[0],
+        ground_truth_dir,
+        excluded_attack_chains=excluded_attack_chains,
     )
 
     attack_ids = {uuid_to_id[u] for u in attack_uuids if u in uuid_to_id}
     contam_ids = {uuid_to_id[u] for u in contam_uuids if u in uuid_to_id}
+    excluded_ids = {uuid_to_id[u] for u in excluded_uuids if u in uuid_to_id}
 
     # Restrict ground truth to test set process nodes
-    test_attacks = attack_ids & test_procs
-    test_contams = contam_ids & test_procs
+    excluded_ids = excluded_ids & test_procs
+    test_procs_eval = test_procs - excluded_ids
+    flagged_eval = flagged_nodes - excluded_ids
+    test_attacks = (attack_ids & test_procs_eval) - excluded_ids
+    test_contams = (contam_ids & test_procs_eval) - excluded_ids
     test_malicious = test_attacks | test_contams
 
     # Exclude contaminated nodes for Strict Attak Chain evaluation
-    strict_universe = test_procs - test_contams
-    strict_flagged = flagged_nodes - test_contams
+    strict_universe = test_procs_eval - test_contams
+    strict_flagged = flagged_eval - test_contams
     strict_metrics = compute_classification_metrics(
         strict_flagged, test_attacks, strict_universe
     )
 
     # Treat both attack and contaminated nodes as Positive class
     causal_metrics = compute_classification_metrics(
-        flagged_nodes, test_malicious, test_procs
+        flagged_eval, test_malicious, test_procs_eval
     )
 
     return DatasetStats(
@@ -332,10 +348,11 @@ def analyze_dataset(
         vocab_size_train_path=len(train_paths),
         novel_test_cmds=novel_test_cmds,
         novel_test_paths=novel_test_paths,
-        n_test_process=len(test_procs),
+        n_test_process=len(test_procs_eval),
+        n_excluded=len(excluded_ids),
         n_attack=len(test_attacks),
         n_contaminated=len(test_contams),
-        n_flagged=len(flagged_nodes),
+        n_flagged=len(flagged_eval),
         strict=strict_metrics,
         causal=causal_metrics,
     )
@@ -351,6 +368,8 @@ def print_report(stats: DatasetStats):
     print(f"{'=' * 60}")
     print("Stats:")
     print(f"  Process Nodes (Test): {stats.n_test_process}")
+    if stats.n_excluded:
+        print(f"  Excluded from metrics: {stats.n_excluded}")
     print(
         f"  Training Vocab:       {stats.vocab_size_train_cmd} cmds, {stats.vocab_size_train_path} paths"
     )
@@ -396,6 +415,7 @@ def save_csv_results(results: list[DatasetStats], output_path: str):
             "test_novel_cmds": r.novel_test_cmds,
             "test_novel_paths": r.novel_test_paths,
             "n_test_process": r.n_test_process,
+            "n_excluded": r.n_excluded,
             "n_attack": r.n_attack,
             "n_contaminated": r.n_contaminated,
             "n_flagged": r.n_flagged,

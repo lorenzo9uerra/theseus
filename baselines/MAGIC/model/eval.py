@@ -565,6 +565,7 @@ def two_level_evaluation(
     test_node_to_attack_chain_all=None,
     val_idx_to_uuid=None,
     test_idx_to_uuid=None,
+    excluded_uuids=None,
 ):
     """
     Entity-level evaluation with two scopes:
@@ -656,6 +657,42 @@ def two_level_evaluation(
         )
         print(f"  Validation: {n_val_nodes} instances -> {len(val_scores)} entities")
         print(f"  Test: {n_test_nodes} instances -> {len(test_scores)} entities")
+
+        if excluded_uuids:
+            excluded_uuids = set(excluded_uuids)
+
+            def _exclude_entities(scores, labels, uuid_list, uuid_to_chain, split_name):
+                if len(uuid_list) == 0:
+                    return scores, labels, uuid_list, uuid_to_chain
+
+                keep_mask = np.array([u not in excluded_uuids for u in uuid_list])
+                if keep_mask.all():
+                    return scores, labels, uuid_list, uuid_to_chain
+
+                kept_old_indices = [i for i, keep in enumerate(keep_mask) if keep]
+                new_uuid_list = [uuid_list[i] for i in kept_old_indices]
+
+                old_to_new = {old_i: new_i for new_i, old_i in enumerate(kept_old_indices)}
+                new_uuid_to_chain = {
+                    old_to_new[old_i]: chain
+                    for old_i, chain in (uuid_to_chain or {}).items()
+                    if old_i in old_to_new
+                }
+
+                dropped = len(uuid_list) - len(new_uuid_list)
+                if dropped > 0:
+                    print(
+                        f"  Excluded {dropped} entities from {split_name} evaluation (excluded attack chains)"
+                    )
+
+                return scores[keep_mask], labels[keep_mask], new_uuid_list, new_uuid_to_chain
+
+            val_scores, val_labels, val_uuid_list, val_uuid_to_chain = _exclude_entities(
+                val_scores, val_labels, val_uuid_list, val_uuid_to_chain, "validation"
+            )
+            test_scores, test_labels, test_uuid_list, test_uuid_to_chain = _exclude_entities(
+                test_scores, test_labels, test_uuid_list, test_uuid_to_chain, "test"
+            )
     else:
         print("WARNING: No UUID mapping provided, using instance-level evaluation")
         val_scores, val_labels = val_scores_inst, val_labels_inst

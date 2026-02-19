@@ -15,6 +15,7 @@ from sklearn.metrics import (
 
 from utils.evaluate_utils import (
     compute_adp_score,
+    get_excluded_node_ids,
     plot_anomaly_score_distribution,
     plot_scores_neat,
 )
@@ -166,6 +167,8 @@ def evaluate(model, val_data, test_data, config, ground_truth):
     - Causal: attack + contaminated nodes as positives (logged as final_test_* + test_adp_causal)
     - Strict Attack Chain: only attack nodes are positive (contaminated excluded; logged as final_strict_test_* + test_adp_strict)
     """
+    excluded_node_ids = get_excluded_node_ids(config)
+
     # Validation: aggregate to entity level, then find threshold
     val_scores_raw, val_labels_raw, val_nodes_raw, _ = inference_loop(
         model, val_data, config
@@ -173,11 +176,26 @@ def evaluate(model, val_data, test_data, config, ground_truth):
     log(
         f"Validation: {len(val_scores_raw)} instances -> {len(set(val_nodes_raw))} entities"
     )
+
+    if excluded_node_ids and val_nodes_raw.size > 0:
+        keep = ~np.isin(val_nodes_raw, list(excluded_node_ids))
+        dropped_instances = int((~keep).sum())
+        dropped_entities = len(set(val_nodes_raw[~keep].tolist()))
+        if dropped_instances > 0:
+            log(
+                f"Validation: excluding {dropped_entities} entities ({dropped_instances} instances) from metrics"
+            )
+        val_scores_raw = val_scores_raw[keep]
+        val_labels_raw = val_labels_raw[keep]
+        val_nodes_raw = val_nodes_raw[keep]
+
     val_scores, val_labels, _ = aggregate_to_entity_level(
         val_scores_raw, val_labels_raw, val_nodes_raw
     )
 
-    val_ap = average_precision_score(val_labels, val_scores)
+    val_ap = (
+        average_precision_score(val_labels, val_scores) if val_labels.size > 0 else 0.0
+    )
     threshold, val_mcc = _find_threshold(val_scores, val_labels)
 
     # Test: aggregate to entity level
@@ -187,11 +205,28 @@ def evaluate(model, val_data, test_data, config, ground_truth):
     log(
         f"Test: {len(test_scores_raw)} instances -> {len(set(test_nodes_raw))} entities"
     )
+
+    if excluded_node_ids and test_nodes_raw.size > 0:
+        keep = ~np.isin(test_nodes_raw, list(excluded_node_ids))
+        dropped_instances = int((~keep).sum())
+        dropped_entities = len(set(test_nodes_raw[~keep].tolist()))
+        if dropped_instances > 0:
+            log(
+                f"Test: excluding {dropped_entities} entities ({dropped_instances} instances) from metrics"
+            )
+        test_scores_raw = test_scores_raw[keep]
+        test_labels_raw = test_labels_raw[keep]
+        test_nodes_raw = test_nodes_raw[keep]
+
     test_scores, test_labels, test_nodes = aggregate_to_entity_level(
         test_scores_raw, test_labels_raw, test_nodes_raw
     )
 
-    test_ap = average_precision_score(test_labels, test_scores)
+    test_ap = (
+        average_precision_score(test_labels, test_scores)
+        if test_labels.size > 0
+        else 0.0
+    )
     test_predictions = (
         np.zeros_like(test_labels)
         if np.isinf(threshold)

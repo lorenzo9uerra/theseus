@@ -179,6 +179,12 @@ def parse_args(args=None):
         default=None,
         help="Whether to treat edges as bidirectional",
     )
+    parser.add_argument(
+        "--exclude_malicious_from_training",
+        type=str_to_bool,
+        default=None,
+        help="If true, train Theseus only on benign-labeled nodes (y==0) within the training split; if false, train on all nodes in the training split.",
+    )
     return parser.parse_args(args)
 
 

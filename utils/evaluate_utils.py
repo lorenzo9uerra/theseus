@@ -184,6 +184,48 @@ def get_uuid_to_index_id_mapping(config):
     return uuid_to_index_id
 
 
+def get_excluded_node_ids(config) -> set[int]:
+    excluded_attack_chains = set(
+        getattr(getattr(config, "dataset_info", None), "excluded_attack_chains", [])
+        or []
+    )
+
+    reapr_csv = _get_reapr_csv_path(config)
+    if not reapr_csv:
+        return set()
+
+    uuid_to_index_id = get_uuid_to_index_id_mapping(config)
+    attack_to_uuids = _parse_reapr_labels_by_attack(reapr_csv)
+
+    excluded_uuids: set[str] = set()
+    for chain_name in excluded_attack_chains:
+        chain_data = attack_to_uuids.get(chain_name)
+        if not chain_data:
+            continue
+        excluded_uuids.update(chain_data.get("attack", set()) or set())
+        excluded_uuids.update(chain_data.get("contaminated", set()) or set())
+
+    excluded_node_ids: set[int] = set()
+    missing = 0
+    for node_uuid in excluded_uuids:
+        idx = uuid_to_index_id.get(node_uuid)
+        if idx is None:
+            missing += 1
+            continue
+        excluded_node_ids.add(int(idx))
+
+    if excluded_node_ids:
+        log(
+            f"Excluding {len(excluded_node_ids)} node(s) from evaluation metrics: {sorted(excluded_attack_chains)}"
+        )
+    if missing:
+        log(
+            f"WARNING: {missing}/{len(excluded_uuids)} excluded UUIDs not found in node tables"
+        )
+
+    return excluded_node_ids
+
+
 def get_ground_truth(config):
     """Loads REAPR ground truth labels and maps them to node IDs."""
     uuid_to_index_id = get_uuid_to_index_id_mapping(config)

@@ -1,3 +1,4 @@
+import csv
 import os
 import warnings
 
@@ -13,6 +14,7 @@ from utils.utils import set_random_seed
 warnings.filterwarnings("ignore")
 
 _MAGIC_ROOT = os.path.dirname(os.path.abspath(__file__))
+_EXCLUDED_ATTACK_CHAINS = {"wwtawwtal_bad_neighborhood"}
 
 try:
     import wandb
@@ -56,6 +58,35 @@ def _resolve_device(device_arg: int) -> torch.device:
         return torch.device("cpu")
 
     return device
+
+
+def _load_excluded_uuids(dataset_name: str) -> set[str]:
+    if not _EXCLUDED_ATTACK_CHAINS:
+        return set()
+
+    project_root = os.path.abspath(os.path.join(_MAGIC_ROOT, os.pardir, os.pardir))
+    gt_dir = os.path.join(
+        project_root, "ground_truth", "reapr-ground-truth", "darpa-tc-engagement3"
+    )
+    gt_path = os.path.join(gt_dir, f"{dataset_name}_labels.csv")
+    if not os.path.isfile(gt_path):
+        return set()
+
+    excluded = set()
+    with open(gt_path, newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            chain = (row.get("attack_chain") or "").strip()
+            uuid = (row.get("uuid") or "").strip()
+            if chain in _EXCLUDED_ATTACK_CHAINS and uuid:
+                excluded.add(uuid)
+
+    if excluded:
+        print(
+            f"Excluding {len(excluded)} UUIDs from evaluation metrics: {sorted(_EXCLUDED_ATTACK_CHAINS)}"
+        )
+
+    return excluded
 
 
 def main(main_args):
@@ -428,6 +459,7 @@ def main(main_args):
             )
 
         # Run two-level evaluation
+        excluded_uuids = _load_excluded_uuids(dataset_name)
         results = two_level_evaluation(
             dataset_name,
             x_train,
@@ -447,6 +479,7 @@ def main(main_args):
             # UUID mappings for entity-level aggregation
             val_idx_to_uuid=val_idx_to_uuid,
             test_idx_to_uuid=test_idx_to_uuid,
+            excluded_uuids=excluded_uuids,
         )
 
         # Log key metrics to wandb

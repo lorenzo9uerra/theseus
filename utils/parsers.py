@@ -137,7 +137,7 @@ def parse_args(args=None):
     parser.add_argument(
         "--mask_ratio",
         type=float,
-        default=0.0,
+        default=None,
         help="Ratio of nodes to mask during training",
     )
     parser.add_argument(

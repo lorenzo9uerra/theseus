@@ -7,7 +7,7 @@ sage_weight_decay: 0.3
 transformer_weight_decay: 0.0075
 sage_dropout: 0.4
 transformer_dropout: 0.1
-mask_ratio: 0.3
+mask_ratio: 0.4
 
 # Model architecture
 nhops: 1

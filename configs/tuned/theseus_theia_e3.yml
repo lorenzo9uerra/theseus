@@ -37,3 +37,4 @@ word2vec:
   compute_loss: true
   negative: 5
   decline_rate: 30
+  token_weighting_mode: reverted_netflow # Options: standard_decay, reverted_netflow, reverted_file, reverted_netflow_and_file

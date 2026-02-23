@@ -1,6 +1,7 @@
 import argparse
 
 from utils.config import Config
+from utils.constants.token_weighting import TOKEN_WEIGHTING_MODES
 
 
 def str_to_bool(value):
@@ -184,6 +185,13 @@ def parse_args(args=None):
         type=str_to_bool,
         default=None,
         help="If true, train Theseus only on benign-labeled nodes (y==0) within the training split; if false, train on all nodes in the training split.",
+    )
+    parser.add_argument(
+        "--token_weighting_mode",
+        type=str,
+        choices=TOKEN_WEIGHTING_MODES,
+        default=None,
+        help="Token weighting mode for node description embeddings.",
     )
     return parser.parse_args(args)
 

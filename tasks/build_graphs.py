@@ -11,6 +11,11 @@ from gensim.models import Word2Vec
 from torch_geometric.data import Data
 
 from utils.constants.graph_events import DARPA_TC_EVENTS, NODE_TYPES
+from utils.constants.token_weighting import (
+    TOKEN_WEIGHTING_MODE_CACHE_SUFFIX,
+    TOKEN_WEIGHTING_MODE_TO_REVERSED_NODE_TYPES,
+    get_token_weighting_mode,
+)
 from utils.evaluate_utils import get_ground_truth
 from utils.utils import (
     create_one_hot,
@@ -457,6 +462,14 @@ def embed_all_nodes(node_metadata, word2vec_models, config, selected_nodes_only=
     zeros_np = np.zeros((embedding_dim,))
     zeros_torch = torch.zeros(embedding_dim, dtype=torch.float32)
     node_embeddings = {}
+    token_weighting_mode = get_token_weighting_mode(config)
+    reverse_weight_node_types = TOKEN_WEIGHTING_MODE_TO_REVERSED_NODE_TYPES[
+        token_weighting_mode
+    ]
+
+    log(
+        f"Token weighting mode: {token_weighting_mode} (reversed types: {sorted(reverse_weight_node_types)})"
+    )
 
     for node_id, metadata in log_tqdm(
         nodes_to_embed.items(), desc="Embedding nodes", miniters=1000
@@ -472,8 +485,8 @@ def embed_all_nodes(node_metadata, word2vec_models, config, selected_nodes_only=
             d = -1 / n * decline_percentage / 100
             a_1 = 1 / n - 0.5 * (n - 1) * d
             weight_list = [a_1 + i * d for i in range(n)]
-            if node_type == "netflow":
-                # Reverse netflow to emphasize destination tokens
+            if node_type in reverse_weight_node_types:
+                # Reverse selected node types to emphasize trailing tokens
                 weight_list.reverse()
 
             vectors_list = []
@@ -1003,6 +1016,8 @@ def get_cache_filename(dataset_name, config):
     if config.use_node_degrees:
         components.append("node_deg")
 
+    token_weighting_mode = get_token_weighting_mode(config)
+    components.append(TOKEN_WEIGHTING_MODE_CACHE_SUFFIX[token_weighting_mode])
     components.append(str(config.seed))
 
     return "_".join(components) + "_cache.pt"

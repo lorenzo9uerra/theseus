@@ -16,7 +16,7 @@ from utils.constants.token_weighting import (
     TOKEN_WEIGHTING_MODE_TO_REVERSED_NODE_TYPES,
     get_token_weighting_mode,
 )
-from utils.evaluate_utils import get_ground_truth
+from utils.ground_truth import get_ground_truth
 from utils.utils import (
     create_one_hot,
     datetime_to_ns_time_us,

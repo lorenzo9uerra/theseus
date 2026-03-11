@@ -29,7 +29,7 @@ EXCLUDED_ATTACK_CLASSES = {
 }
 
 
-def _determine_split(day, config):
+def determine_split(day, config):
     if day in config.dataset_info.train_days:
         return "train"
     elif day in config.dataset_info.val_days:
@@ -39,11 +39,11 @@ def _determine_split(day, config):
     return "train"
 
 
-def _format_event_day_label(config, day):
+def format_event_day_label(config, day):
     return f"{config.dataset_info.year_month}-{int(day):02d}"
 
 
-def _get_selected_days(config):
+def get_selected_days(config):
     days = set()
     days.update(config.dataset_info.train_days)
     days.update(config.dataset_info.val_days)
@@ -62,7 +62,7 @@ def _is_valid_parquet(path):
         return False
 
 
-def _ensure_partitioned_event_parquet(config, event_type_set):
+def ensure_partitioned_event_parquet(config, event_type_set):
     """Create Parquet dataset with only selected days from config (with file locking)."""
     data_dir = os.path.join(config.data_dir, config.dataset)
     csv_path = os.path.join(data_dir, "event_table.csv")
@@ -84,10 +84,8 @@ def _ensure_partitioned_event_parquet(config, event_type_set):
             f"Event table not found at {raw_parquet_path} or {csv_path}."
         )
 
-    selected_days = _get_selected_days(config)
-    selected_day_labels = [
-        _format_event_day_label(config, day) for day in selected_days
-    ]
+    selected_days = get_selected_days(config)
+    selected_day_labels = [format_event_day_label(config, day) for day in selected_days]
 
     log(
         f"Materializing preprocessed Parquet for {len(selected_days)} selected days: {selected_days}"
@@ -475,13 +473,13 @@ def get_nodes_from_selected_days(config, parquet_path):
         ["event_day", "src_index_id", "dst_index_id"]
     )
 
-    selected_days = _get_selected_days(config)
+    selected_days = get_selected_days(config)
     all_nodes = set()
 
     for day in log_tqdm(
         selected_days, desc="Collecting nodes from selected days", logging=False
     ):
-        day_label = _format_event_day_label(config, day)
+        day_label = format_event_day_label(config, day)
         day_events = (
             events_scan.filter(pl.col("event_day") == day_label)
             .select(["src_index_id", "dst_index_id"])
@@ -502,7 +500,7 @@ def get_nodes_from_selected_days(config, parquet_path):
 def get_training_nodes_from_csv(config):
     """Collect unique node IDs appearing in training days only."""
     log("Identifying training set nodes from partitioned event dataset...")
-    parquet_path = _ensure_partitioned_event_parquet(config, set(DARPA_TC_EVENTS))
+    parquet_path = ensure_partitioned_event_parquet(config, set(DARPA_TC_EVENTS))
     events_scan = pl.scan_parquet(parquet_path).select(
         ["event_day", "src_index_id", "dst_index_id"]
     )
@@ -511,7 +509,7 @@ def get_training_nodes_from_csv(config):
     for day in log_tqdm(
         config.dataset_info.train_days, desc="Collecting training nodes", logging=False
     ):
-        day_label = _format_event_day_label(config, day)
+        day_label = format_event_day_label(config, day)
         day_events = (
             events_scan.filter(pl.col("event_day") == day_label)
             .select(["src_index_id", "dst_index_id"])
@@ -543,7 +541,7 @@ def get_cache_filename(dataset_name, config):
     return "_".join(components) + "_cache.pt"
 
 
-def _save_graph_cache(graphs, ground_truth, cache_dir, dataset_name, config):
+def save_graph_cache(graphs, ground_truth, cache_dir, dataset_name, config):
     os.makedirs(cache_dir, exist_ok=True)
     cache_filename = get_cache_filename(dataset_name, config)
     cache_path = os.path.join(cache_dir, cache_filename)
@@ -551,7 +549,7 @@ def _save_graph_cache(graphs, ground_truth, cache_dir, dataset_name, config):
     log(f"Saved graph cache with ground truth to {cache_path}")
 
 
-def _filter_ground_truth(ground_truth):
+def filter_ground_truth(ground_truth):
     """Remove excluded attack classes from ground truth."""
     filtered = {}
     for attack_id, attack_metadata in ground_truth.items():
@@ -562,7 +560,7 @@ def _filter_ground_truth(ground_truth):
     return filtered
 
 
-def _get_malicious_nodes(ground_truth):
+def get_malicious_nodes(ground_truth):
     """Extract malicious node IDs from ground truth (attack + contaminated)."""
     all_malicious_nodes = set()
     for attack_id, attack_metadata in ground_truth.items():
@@ -573,7 +571,7 @@ def _get_malicious_nodes(ground_truth):
     return all_malicious_nodes
 
 
-def _relabel_graphs(graphs, all_malicious_nodes):
+def relabel_graphs(graphs, all_malicious_nodes):
     """Relabel graph nodes based on the set of malicious node IDs (in-place)."""
     total_relabeled = 0
     for graph_list in graphs.values():

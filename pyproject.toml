@@ -37,8 +37,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
     "ruff>=0.14.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 88

@@ -6,19 +6,19 @@ import torch
 from torch_geometric.data import Data
 
 from tasks.build_graphs_support import (
-    _determine_split,
-    _ensure_partitioned_event_parquet,
-    _filter_ground_truth,
-    _format_event_day_label,
-    _get_malicious_nodes,
-    _get_selected_days,
-    _relabel_graphs,
-    _save_graph_cache,
+    determine_split,
     embed_all_nodes,
+    ensure_partitioned_event_parquet,
     fetch_node_metadata,
+    filter_ground_truth,
+    format_event_day_label,
+    get_malicious_nodes,
     get_nodes_from_selected_days,
+    get_selected_days,
     get_training_nodes_from_csv,
     load_graph_cache,
+    relabel_graphs,
+    save_graph_cache,
     train_word2vec,
 )
 from utils.constants.graph_events import DARPA_TC_EVENTS
@@ -85,7 +85,7 @@ def create_graph_window(
 ):
     """Build a PyG Data object for a single time window with node/edge features and labels."""
     src_ids, dst_ids, edge_times, edge_ops, fused_counts = edge_arrays
-    split = _determine_split(day, config)
+    split = determine_split(day, config)
     num_raw_edges = len(src_ids)
 
     # Build node ID mappings
@@ -394,7 +394,7 @@ def gen_edge_fused_tw_single_day(
     Returns dict of {split: [graphs]} for the day.
     """
     log(f"Processing day {day_idx + 1}/{total_days}: {day}")
-    day_label = _format_event_day_label(config, day)
+    day_label = format_event_day_label(config, day)
     start_ns = datetime_to_ns_time_us(f"{day_label} 00:00:00")
     end_ns = start_ns + NANOSECONDS_PER_DAY
 
@@ -440,7 +440,7 @@ def gen_edge_fused_tw(node_metadata, config, word2vec_models, all_malicious_node
     """Build temporal graph windows with node/edge features for all selected days."""
     event_type_set = set(DARPA_TC_EVENTS)
 
-    parquet_path = _ensure_partitioned_event_parquet(config, event_type_set)
+    parquet_path = ensure_partitioned_event_parquet(config, event_type_set)
     events_scan = pl.scan_parquet(parquet_path).filter(
         pl.col("operation").is_in(event_type_set)
     )
@@ -453,7 +453,7 @@ def gen_edge_fused_tw(node_metadata, config, word2vec_models, all_malicious_node
 
     graph_windows = {"train": [], "val": [], "test": []}
 
-    days = _get_selected_days(config)
+    days = get_selected_days(config)
     total_days = len(days)
     log(f"Processing {total_days} days...")
 
@@ -493,13 +493,13 @@ def build_graphs(config):
         cache_dir, dataset_name, config
     )
     if cached_graphs and cached_ground_truth:
-        filtered_ground_truth = _filter_ground_truth(cached_ground_truth)
-        all_malicious_nodes = _get_malicious_nodes(filtered_ground_truth)
+        filtered_ground_truth = filter_ground_truth(cached_ground_truth)
+        all_malicious_nodes = get_malicious_nodes(filtered_ground_truth)
 
         log(
             f"Label scope: causal (attack + contaminated): {len(all_malicious_nodes)} malicious nodes"
         )
-        _relabel_graphs(cached_graphs, all_malicious_nodes)
+        relabel_graphs(cached_graphs, all_malicious_nodes)
         return cached_graphs, filtered_ground_truth
 
     log("Building graphs with embedded features and ground truth labels...")
@@ -509,8 +509,8 @@ def build_graphs(config):
     except Exception as exc:
         raise ValueError(f"Failed to load ground truth: {exc}") from exc
 
-    filtered_ground_truth = _filter_ground_truth(ground_truth)
-    all_malicious_nodes = _get_malicious_nodes(filtered_ground_truth)
+    filtered_ground_truth = filter_ground_truth(ground_truth)
+    all_malicious_nodes = get_malicious_nodes(filtered_ground_truth)
     log(
         f"Label scope: causal (attack + contaminated): {len(all_malicious_nodes)} malicious nodes"
     )
@@ -523,6 +523,6 @@ def build_graphs(config):
         node_metadata, config, word2vec_models, all_malicious_nodes
     )
 
-    _save_graph_cache(graphs, ground_truth, cache_dir, dataset_name, config)
+    save_graph_cache(graphs, ground_truth, cache_dir, dataset_name, config)
     log("Graph building complete!")
     return graphs, filtered_ground_truth

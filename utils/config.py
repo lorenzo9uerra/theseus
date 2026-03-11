@@ -9,7 +9,7 @@ from typing import Any, cast
 import torch
 import yaml
 
-from tasks.build_graphs import get_cache_filename
+from tasks.build_graphs_support import get_cache_filename
 
 
 class ConfigError(Exception):

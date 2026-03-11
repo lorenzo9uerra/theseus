@@ -42,7 +42,9 @@ def test_evaluate_filters_excluded_nodes_and_reports_strict_metrics(
 ):
     config = SimpleNamespace(device="cpu", outputs_dir=str(tmp_path))
     val_data = [ScoredGraph([0.9, 0.1], [1, 0], [10, 20])]
-    test_data = [ScoredGraph([0.95, 0.85, 0.99], [1, 1, 0], [100, 200, 300])]
+    test_data = [
+        ScoredGraph([0.95, 0.85, 0.99, 0.1], [1, 1, 0, 0], [100, 200, 300, 400])
+    ]
     ground_truth = {"A-1": {"nids": [100], "contaminated_nids": [200]}}
 
     monkeypatch.setattr("tasks.evaluate.get_excluded_node_ids", lambda config: {300})
@@ -64,6 +66,7 @@ def test_evaluate_filters_excluded_nodes_and_reports_strict_metrics(
     assert metrics["final_test_recall"] == pytest.approx(0.5)
     assert metrics["confusion_matrix_fp"] == 0
     assert metrics["final_strict_test_recall"] == pytest.approx(1.0)
+    assert metrics["strict_confusion_matrix_tn"] == 1
     assert metrics["strict_confusion_matrix_tp"] == 1
     assert metrics["test_adp_strict"] == pytest.approx(0.4)
     assert metrics["test_adp_causal"] == pytest.approx(0.7)

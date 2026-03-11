@@ -179,7 +179,15 @@ For researchers intending to modify or extend the code, install the development 
 uv sync --extra dev
 ```
 
-This installs `ruff` for linting and formatting, along with `pre-commit` hooks.
+This installs `pytest`, `ruff`, and `pre-commit`.
+
+**Run Tests:**
+
+```bash
+uv run pytest tests
+```
+
+These tests are synthetic unit and smoke tests for the core pipeline and do not require dataset downloads or cluster access.
 
 **Setup Git Hooks:**
 

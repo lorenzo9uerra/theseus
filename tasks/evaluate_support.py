@@ -120,8 +120,7 @@ def find_threshold(scores, labels):
 
 def compute_binary_metrics(labels, predictions, prefix, confusion_prefix):
     """Compute thresholded binary metrics under a shared metric schema."""
-    cm = confusion_matrix(labels, predictions)
-    tn, fp, fn, tp = cm.ravel() if cm.size == 4 else (0, 0, 0, 0)
+    tn, fp, fn, tp = confusion_matrix(labels, predictions, labels=[0, 1]).ravel()
 
     precision = precision_score(
         labels, predictions, average="binary", zero_division=0

@@ -9,7 +9,9 @@ from tasks.build_graphs_support import (
     format_event_day_label,
     get_malicious_nodes,
     get_selected_days,
+    load_graph_cache,
     relabel_graphs,
+    save_graph_cache,
 )
 
 
@@ -63,3 +65,41 @@ def test_relabel_graphs_updates_labels_from_original_node_ids():
     relabel_graphs(graphs, {10, 12})
 
     assert graph.y.tolist() == [1, 0, 1]
+
+
+def test_graph_cache_round_trip(tmp_path):
+    config = SimpleNamespace(
+        use_fused_edge_count=True,
+        use_node_degrees=False,
+        seed=7,
+        token_weighting_mode="standard_decay",
+    )
+    graphs = {"train": [{"graph_id": 1}], "val": [], "test": [{"graph_id": 2}]}
+    ground_truth = {"attack": {"nids": [1], "contaminated_nids": [2]}}
+
+    save_graph_cache(graphs, ground_truth, str(tmp_path), "THEIA_E3", config)
+    loaded_graphs, loaded_ground_truth = load_graph_cache(
+        str(tmp_path), "THEIA_E3", config
+    )
+
+    assert loaded_graphs == graphs
+    assert loaded_ground_truth == ground_truth
+
+
+def test_load_graph_cache_ignores_empty_ground_truth(tmp_path):
+    config = SimpleNamespace(
+        use_fused_edge_count=False,
+        use_node_degrees=False,
+        seed=11,
+        token_weighting_mode="standard_decay",
+    )
+    graphs = {"train": [{"graph_id": 1}], "val": [], "test": []}
+    ground_truth = {"attack": {"nids": [], "contaminated_nids": []}}
+
+    save_graph_cache(graphs, ground_truth, str(tmp_path), "THEIA_E3", config)
+    loaded_graphs, loaded_ground_truth = load_graph_cache(
+        str(tmp_path), "THEIA_E3", config
+    )
+
+    assert loaded_graphs is None
+    assert loaded_ground_truth is None

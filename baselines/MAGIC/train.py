@@ -48,7 +48,9 @@ def _resolve_device(device_arg: int) -> torch.device:
                 "(e.g., dgl-cu116 for CUDA 11.6)."
             )
         else:
-            print(f"Warning: failed to use DGL on {device}: {exc}. Falling back to CPU.")
+            print(
+                f"Warning: failed to use DGL on {device}: {exc}. Falling back to CPU."
+            )
         return torch.device("cpu")
 
     return device

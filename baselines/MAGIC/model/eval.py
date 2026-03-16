@@ -672,7 +672,9 @@ def two_level_evaluation(
                 kept_old_indices = [i for i, keep in enumerate(keep_mask) if keep]
                 new_uuid_list = [uuid_list[i] for i in kept_old_indices]
 
-                old_to_new = {old_i: new_i for new_i, old_i in enumerate(kept_old_indices)}
+                old_to_new = {
+                    old_i: new_i for new_i, old_i in enumerate(kept_old_indices)
+                }
                 new_uuid_to_chain = {
                     old_to_new[old_i]: chain
                     for old_i, chain in (uuid_to_chain or {}).items()
@@ -685,13 +687,26 @@ def two_level_evaluation(
                         f"  Excluded {dropped} entities from {split_name} evaluation (excluded attack chains)"
                     )
 
-                return scores[keep_mask], labels[keep_mask], new_uuid_list, new_uuid_to_chain
+                return (
+                    scores[keep_mask],
+                    labels[keep_mask],
+                    new_uuid_list,
+                    new_uuid_to_chain,
+                )
 
-            val_scores, val_labels, val_uuid_list, val_uuid_to_chain = _exclude_entities(
-                val_scores, val_labels, val_uuid_list, val_uuid_to_chain, "validation"
+            val_scores, val_labels, val_uuid_list, val_uuid_to_chain = (
+                _exclude_entities(
+                    val_scores,
+                    val_labels,
+                    val_uuid_list,
+                    val_uuid_to_chain,
+                    "validation",
+                )
             )
-            test_scores, test_labels, test_uuid_list, test_uuid_to_chain = _exclude_entities(
-                test_scores, test_labels, test_uuid_list, test_uuid_to_chain, "test"
+            test_scores, test_labels, test_uuid_list, test_uuid_to_chain = (
+                _exclude_entities(
+                    test_scores, test_labels, test_uuid_list, test_uuid_to_chain, "test"
+                )
             )
     else:
         print("WARNING: No UUID mapping provided, using instance-level evaluation")

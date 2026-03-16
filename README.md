@@ -12,7 +12,7 @@ Sync the project dependencies:
 uv sync
 ```
 
-For reproduction across heterogeneous systems, we also provide container recipes in [containers/](./containers/).
+For reproduction across heterogeneous systems, we also provide container recipes and a GitHub Actions workflow for publishing the main Theseus image in [containers/](./containers/).
 
 ## Data Setup
 
@@ -206,7 +206,7 @@ uv run ruff format .
 
 ## Containers
 
-For publication-oriented reproduction, we provide both a Dockerfile and an Apptainer definition for the main Theseus pipeline in [containers/](./containers/). They install the pinned `uv.lock` environment inside the image and expect `data/`, `cache/`, `checkpoints/`, and `results/` to be mounted at runtime.
+For publication-oriented reproduction, we provide both a Dockerfile and an Apptainer definition for the main Theseus pipeline in [containers/](./containers/), together with a GitHub Actions workflow that can publish the Docker image to GHCR. The container path is optional and complements the standard `uv.lock`-based workflow.
 
 ## Appendix: Manual Data Processing
 

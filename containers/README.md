@@ -1,8 +1,18 @@
 # Containers
 
-These recipes provide a publication-oriented runtime for the main Theseus pipeline.
+These files provide a publication-oriented runtime for the main Theseus pipeline.
 
 They intentionally exclude large mutable artifacts such as `data/`, `cache/`, `checkpoints/`, and `results/`. Mount those at runtime.
+
+## Recommended Path
+
+The recommended path is:
+
+1. build and publish the Docker image with GitHub Actions to GHCR;
+2. pull it on the cluster with Apptainer;
+3. bind `data/`, `cache/`, `checkpoints/`, and `results/` at runtime.
+
+The workflow is defined in [publish-theseus-image.yml](../.github/workflows/publish-theseus-image.yml).
 
 ## Docker
 
@@ -26,13 +36,29 @@ docker run --rm -it --gpus all \
 
 ## Apptainer
 
-Build:
+On the Telecom Paris cluster, load the runtime first:
+
+```bash
+module load apptainer
+```
+
+If the image has already been published to GHCR, pull it directly:
+
+```bash
+apptainer pull theseus.sif docker://ghcr.io/<owner>/<repo>:latest
+```
+
+You can also pin a commit-specific image:
+
+```bash
+apptainer pull theseus.sif docker://ghcr.io/<owner>/<repo>:sha-<commit>
+```
+
+Local builds from [theseus.def](./theseus.def) are still possible on systems where unprivileged Apptainer builds are enabled:
 
 ```bash
 apptainer build theseus.sif containers/theseus.def
 ```
-
-If your cluster does not allow local unprivileged builds, build the image on a machine with Docker/Apptainer support or use a remote Singularity build service, then copy the resulting `.sif` to the cluster.
 
 Run the paper evaluation on a cluster:
 

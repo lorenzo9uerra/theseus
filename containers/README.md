@@ -48,7 +48,7 @@ docker run --rm -it --gpus all \
 
 ## Apptainer
 
-On the Telecom Paris cluster, load the runtime first:
+On clusters, load the Apptainer runtime first:
 
 ```bash
 module load apptainer

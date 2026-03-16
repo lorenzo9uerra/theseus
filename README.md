@@ -206,7 +206,7 @@ uv run ruff format .
 
 ## Containers
 
-For publication-oriented reproduction, we provide an optional Docker-based container path for the main Theseus pipeline in [containers/](./containers/), together with a GitHub Actions workflow that can publish the image to GHCR. The canonical workflow remains the standard `uv.lock`-based setup; the container is an additional convenience for evaluators running on heterogeneous systems.
+We provide an optional Docker-based container path for the main Theseus pipeline in [containers/](./containers/), together with a GitHub Actions workflow that can publish the image to GHCR. The canonical workflow remains the standard `uv.lock`-based setup; the container is an additional convenience for evaluators running on heterogeneous systems.
 
 Published images use the GHCR path `ghcr.io/lorenzo9uerra/theseus:<tag>`. For artifact evaluation, prefer a pinned `sha-<commit>` tag over `latest`.
 

@@ -1,26 +1,6 @@
 name: Publish Theseus Image
 
 on:
-  push:
-    branches:
-      - main
-      - docker
-    tags:
-      - "v*"
-  pull_request:
-    paths:
-      - ".github/workflows/publish-theseus-image.yml"
-      - ".dockerignore"
-      - "containers/theseus.Dockerfile"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "main.py"
-      - "configs/**"
-      - "ground_truth/**"
-      - "models/**"
-      - "scripts/**"
-      - "tasks/**"
-      - "utils/**"
   workflow_dispatch:
 
 permissions:

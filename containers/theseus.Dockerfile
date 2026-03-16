@@ -32,7 +32,7 @@ COPY scripts ./scripts
 COPY tasks ./tasks
 COPY utils ./utils
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev && rm -rf /root/.cache/uv
 RUN .venv/bin/python -c "import torch; import torch_geometric"
 
 CMD ["bash"]

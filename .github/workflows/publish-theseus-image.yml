@@ -28,6 +28,7 @@ permissions:
   packages: write
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
@@ -35,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Free runner disk space
         run: |

@@ -12,6 +12,8 @@ Sync the project dependencies:
 uv sync
 ```
 
+For reproduction across heterogeneous systems, we also provide container recipes in [containers/](./containers/).
+
 ## Data Setup
 
 To facilitate reproducibility, we provide pre-processed datasets and artifacts. While it is possible to process the raw data from scratch (see [Manual Data Processing](#appendix-manual-data-processing) at the end of this document), we recommend using the Zenodo artifacts for immediate access.
@@ -201,6 +203,10 @@ uv run pre-commit install
 uv run ruff check .
 uv run ruff format .
 ```
+
+## Containers
+
+For publication-oriented reproduction, we provide both a Dockerfile and an Apptainer definition for the main Theseus pipeline in [containers/](./containers/). They install the pinned `uv.lock` environment inside the image and expect `data/`, `cache/`, `checkpoints/`, and `results/` to be mounted at runtime.
 
 ## Appendix: Manual Data Processing
 

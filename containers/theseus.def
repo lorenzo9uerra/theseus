@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: python:3.12-slim
+
+%files
+    LICENSE /opt/theseus/LICENSE
+    README.md /opt/theseus/README.md
+    main.py /opt/theseus/main.py
+    pyproject.toml /opt/theseus/pyproject.toml
+    uv.lock /opt/theseus/uv.lock
+    configs /opt/theseus/configs
+    ground_truth /opt/theseus/ground_truth
+    models /opt/theseus/models
+    scripts /opt/theseus/scripts
+    tasks /opt/theseus/tasks
+    utils /opt/theseus/utils
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export UV_LINK_MODE=copy
+    export UV_PROJECT_ENVIRONMENT=/opt/theseus/.venv
+    export PATH=/opt/theseus/.venv/bin:/root/.local/bin:$PATH
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update && apt-get install -y --no-install-recommends \
+        bash \
+        build-essential \
+        ca-certificates \
+        curl \
+        git \
+        libgomp1 \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        unzip \
+        && rm -rf /var/lib/apt/lists/*
+
+    pip install --no-cache-dir uv==0.10.10
+
+    cd /opt/theseus
+    uv sync --frozen --no-dev
+    .venv/bin/python -c "import torch; import torch_geometric"
+
+%runscript
+    cd /opt/theseus
+    exec /opt/theseus/.venv/bin/python /opt/theseus/main.py "$@"
+
+%test
+    cd /opt/theseus
+    .venv/bin/python -c "import torch; import torch_geometric"

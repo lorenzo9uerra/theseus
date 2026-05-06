@@ -1,0 +1,6 @@
+TRACE_E3:
+  name: "trace_e3"
+  # Attacks happened in days: 10, 12, 13
+  train_days: [ 9, 11 ]
+  val_days: [ 10 ]
+  test_days: [ 12, 13 ]

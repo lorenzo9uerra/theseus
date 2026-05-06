@@ -1,0 +1,15 @@
+THEIA_E3:
+  name: "theia_e3"
+  year_month: "2018-04"
+  # Liu et al's paper describes three uptime regimes:
+  #   T1: Apr. 3--6
+  #   T2: Apr. 9--10
+  #   T3: Apr. 10--14
+  # Attacks happened in days: 10, 13 (both in T3)
+  # In order to stay in T3 and avoid evaluating against distribution shifts,
+  # we relax train/val temporal separation within pre-deployment data:
+  # train uses day 11, validation uses day 10 (the other attack day), and
+  # testing uses days 12--13. This is the canonical T3 split used in the paper.
+  train_days: [ 11 ]
+  val_days: [ 10 ]
+  test_days: [ 12, 13 ]

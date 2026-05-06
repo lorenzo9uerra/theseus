@@ -1,0 +1,40 @@
+# Training hyperparameters
+num_epochs: 100
+patience: 20
+sage_lr: 4.8e-5
+transformer_lr: 7.5e-5
+sage_weight_decay: 0.06
+transformer_weight_decay: 0.07
+sage_dropout: 0.25
+transformer_dropout: 0.2
+mask_ratio: 0.4
+
+# Model architecture
+nhops: 1
+node_out_dim: 128
+num_heads: 8
+embed_dim: 128
+num_layers: 2
+
+# Batching and memory management
+window_size_minutes: 15 # Snapshot window size in minutes
+fuse_edge: true # Whether to fuse multiple consecutive edges between same node pair
+max_nodes: 10000 # Sample subgraphs to prevent OOM in Transformer
+exclude_malicious_from_training: false # If true, train only on benign-labeled nodes (y==0) within the training split; labels remain causal (attack+contaminated) for thresholding/eval
+bidirectional_edges: true # Whether to treat edges as bidirectional
+graph_batch_size: 2 # Number of graphs per batch during training
+use_fused_edge_count: true # Whether to use fused edge count as edge feature
+use_node_degrees: true # Whether to use node degree as node feature
+
+# Word2Vec feature embedding
+word2vec:
+  emb_dim: 128
+  epochs: 50
+  alpha: 0.025
+  window_size: 5
+  min_count: 1
+  use_skip_gram: true
+  compute_loss: true
+  negative: 5
+  decline_rate: 30
+  token_weighting_mode: reverted_netflow # Options: standard_decay, reverted_netflow, reverted_file, reverted_netflow_and_file

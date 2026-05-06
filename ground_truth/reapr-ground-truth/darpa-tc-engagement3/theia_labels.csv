@@ -1,0 +1,128 @@
+attack_chain,uuid,process_name,label
+theia_3.3_fail_allstate, 8B161C29-0000-0000-0000-000000000020, /usr/bin/firefox, attack
+theia_3.3_fail_gatech_clean, 5418F32A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 4E18B22A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 5518F72A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 6B18B82B-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 5618FB2A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 5818FF2A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 64189C2B-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 65189F2B-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 6618A32B-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 6718A92B-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 4F18B22A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 5318F12A-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_fail_gatech_clean, 06187E2A-0000-0000-0000-000000000020, /usr/bin/firefox, attack
+theia_3.3_fail_gatech_clean, 78188B2C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 6818A92B-0000-0000-0000-000000000020, /home/admin/clean, attack
+theia_3.3_fail_gatech_clean, 79188C2C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 7B18A02C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 7D18A12C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 7E18A32C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 7F18A52C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 8018A52C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 8118AB2C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 8318AC2C-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, CD186B2D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, CE186C2D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 8718032D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, D0187D2D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, D1187E2D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, D518C12D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, D618C22D-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_fail_gatech_clean, 6918A92B-0000-0000-0000-000000000020, /home/admin/clean, attack
+theia_3.3_fail_gatech_clean, 6D18C82B-0000-0000-0000-000000000020, /home/admin/clean (deleted), attack
+theia_3.3_success_gatech_profile, FA1F9E30-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, C21F0F30-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, EF1F3230-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, 1920A530-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, EB1F2430-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, C31F0F30-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, EE1F3230-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, F71F9730-0000-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, attack
+theia_3.3_success_gatech_profile, 7F1FD92F-0000-0000-0000-000000000020, /usr/bin/firefox, attack
+theia_3.3_success_gatech_profile, 54387BBE-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, FB1F9E30-0000-0000-0000-000000000020, /home/admin/profile, attack
+theia_3.3_success_gatech_profile, 61739171-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 55387DBE-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 60739071-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 223838BC-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 23383FBC-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 26200C31-0000-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 07369EB8-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 29202531-0000-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 0836A1B8-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 0A36B3B8-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, C43590B6-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, EB3597B7-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, EC3598B7-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, ED35A9B7-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 980A5F85-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, EE35ABB7-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, D037D3BA-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, D137D4BA-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, D237D6BA-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 273847BC-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, FC1F9E30-0000-0000-0000-000000000020, /home/admin/profile, attack
+theia_3.3_success_gatech_profile, 1A20AE30-0000-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 1B20AF30-0000-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 32220A33-0000-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 6D72B270-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 6E72B670-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, BC72F370-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, BD72F470-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, BE72F470-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, BF72F470-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, C072F470-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, C172F570-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, C272F570-0100-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 960A5385-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 970A5485-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 7135AAB4-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.3_success_gatech_profile, 1D38E3BB-0200-0000-0000-000000000020, /home/admin/profile (deleted), attack
+theia_3.11_fail, 7235B0B4-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/pass_mgr, attack
+theia_3.11_fail, 3A3530B4-0200-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, contaminated
+theia_3.11_success, 01368CB8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, B53501B6-0200-0000-0000-000000000020, ./gtcache, attack
+theia_3.11_success, BC353DB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 033690B8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, BD353EB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 043694B8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 8F3745BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 903745BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C1357AB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C2357BB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C6359FB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C735BAB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C835BAB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 3F36C5B8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 4036C6B8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, CA37B9BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, CB37BFBA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C337B3BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C437B3BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 7737F1B9-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 7837F1B9-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, CD37C5BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, CE37C9BA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, B33501B6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/pass_mgr, attack
+theia_3.11_success, B43501B6-0200-0000-0000-000000000020, /bin/sh, attack
+theia_3.11_success, 3A3530B4-0200-0000-0000-000000000020, /home/admin/Downloads/firefox/firefox, contaminated
+theia_3.11_success, 5336F2B8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 55361BB9-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 56361CB9-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, F135CDB7-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, C935BBB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, CA35BBB6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, F335D6B7-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, F235D6B7-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, B63501B6-0200-0000-0000-000000000020, /bin/dash, attack
+theia_3.11_success, 9F376ABA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, B73501B6-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 3536B9B8-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, A1377EBA-0200-0000-0000-000000000020, /etc/firefox/native-messaging-hosts/gtcache, attack
+theia_3.11_success, 283847BC-0200-0000-0000-000000000020, /var/log/mail, attack
+theia_3.11_success, 293847BC-0200-0000-0000-000000000020, uname, attack
+theia_3.11_success, 4D38FABD-0200-0000-0000-000000000020, uname, attack
+theia_4.8_fail, 62175519-0400-0000-0000-000000000020, ./tcexec, attack
+theia_4.8_fail, 1D173C19-0400-0000-0000-000000000020, bash, attack

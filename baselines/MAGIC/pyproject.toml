@@ -1,0 +1,28 @@
+[project]
+name = "magic-baseline"
+version = "0.1.0"
+description = "Magic baseline for DARPA TC E3 intrusion detection"
+readme = "README.md"
+requires-python = ">=3.9,<3.10"
+dependencies = [
+    "matplotlib>=3.7,<3.10",
+    "numpy<2",
+    "torch==1.12.1+cu116",
+    "torchvision==0.13.1+cu116",
+    "torchaudio==0.12.1",
+    "dgl==1.0.0",
+    "scikit-learn==1.2.2",
+    "polars==1.36.1",
+    "xxhash",
+    "wandb",
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu116"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchvision = { index = "pytorch" }
+torchaudio = { index = "pytorch" }

@@ -1,0 +1,15 @@
+atlasv2_h1:
+  name: "atlasv2_h1"
+  year_month: "2022-07"
+  train_days: [15, 16, 17, 18]
+  val_days: []
+  test_days: [19, 20]
+  timezone: "UTC"
+
+atlasv2_h2:
+  name: "atlasv2_h2"
+  year_month: "2022-07"
+  train_days: [15, 16, 17, 18]
+  val_days: []
+  test_days: [19, 20]
+  timezone: "UTC"

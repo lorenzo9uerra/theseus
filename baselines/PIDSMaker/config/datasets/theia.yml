@@ -1,0 +1,7 @@
+THEIA_E3:
+  name: "theia_e3"
+  year_month: "2018-04"
+  # Attacks happened in days: 10, 13
+  train_days: [ 11 ]
+  val_days: [ 10 ]
+  test_days: [ 12, 13 ]

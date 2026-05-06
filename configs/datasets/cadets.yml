@@ -1,0 +1,8 @@
+CADETS_E3:
+  name: "cadets_e3"
+  year_month: "2018-04"
+  excluded_attack_chains: [ "wwtawwtal_bad_neighborhood" ]
+  # Attacks happened in days: 6, 11, 12, 13
+  train_days: [ 2, 3, 4, 5, 7, 8, 9 ]
+  val_days: [ 6, 10 ]
+  test_days: [ 11, 12, 13 ]

@@ -53,11 +53,11 @@ def main(config):
 
         log(f"Test mode: Loading model from {config.checkpoint}")
         model = initialize_model(config, train_data, config.checkpoint)
-        model.eval()
     else:
         # Training mode: train or resume training
         model = train(config, train_data, val_data, test_data, ground_truth)
 
+    model.eval()
     metrics = evaluate(
         model,
         val_data,

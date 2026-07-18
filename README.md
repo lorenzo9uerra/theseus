@@ -115,6 +115,7 @@ For the allowlist row, regenerate and aggregate the deterministic diagnostic:
 ```bash
 for ds in CADETS_E3 FIVEDIRECTIONS_E3 THEIA_E3 TRACE_E3; do
   uv run python scripts/allowlist_diagnostic.py "$ds" \
+    --cmd-mode executable \
     --output "outputs/${ds,,}_allowlist_diagnostic.csv"
 done
 uv run python scripts/aggregate_allowlist_results.py
@@ -135,14 +136,14 @@ After extracting `atlasv2_artifacts.tar.gz` into `atlas_bundle/` as shown above:
 
 * the staged payload includes:
   * processed ATLAS parquet tables under `atlas_bundle/data/ATLASV2/`
-  * sanitized canonical paper-result logs under `atlas_bundle/results/`
+  * sanitized canonical result logs, including AP and AUROC, under `atlas_bundle/results/`
   * deterministic allowlist diagnostic CSVs under `atlas_bundle/outputs/`
   * Theseus ATLAS cache/checkpoint payloads under `atlas_bundle/theseus/`
   * eval-only Velox artifacts under `atlas_bundle/pidsmaker/`
 
-The public ATLASv2 bundle intentionally excludes raw Slurm logs. It ships the
-canonical sanitized result logs used for the paper table, plus the staged inputs
-needed to rerun ATLASv2 evaluation locally.
+The public ATLASv2 bundle intentionally excludes raw Slurm logs. It contains the
+sanitized canonical result logs used for the paper table, together with the staged
+caches, checkpoints, and baseline artifacts needed to rerun the evaluation locally.
 
 To reconstruct the exact paper table from the packaged canonical results:
 
@@ -214,7 +215,7 @@ uv run main.py CADETS_E3
 
 **Arguments:**
 
-* `--dataset`: The target dataset (`CADETS_E3`, `THEIA_E3`, `FIVEDIRECTIONS_E3`, `TRACE_E3`).
+* `dataset`: Positional target dataset (`CADETS_E3`, `THEIA_E3`, `FIVEDIRECTIONS_E3`, `TRACE_E3`).
 * `--config PATH`: Path to a custom configuration file (overrides defaults).
 * `--test`: Run evaluation only (skips training; requires valid checkpoints).
 * `--wandb`: Enable logging to Weights & Biases.
@@ -273,6 +274,8 @@ make all
 uv run python scripts/aggregate_results.py
 ```
 
+PIDSMaker's retained evaluation logs use the legacy key `final_auc` for AUROC.
+
 For targeted reruns, `baselines/MAGIC/README.md` documents `make train` and
 single-seed `train.py` commands, while `baselines/PIDSMaker/README.md` documents
 `make orthrus`, `make velox`, and single-run `pidsmaker/main.py` commands.
@@ -304,9 +307,9 @@ uv run pre-commit install
 **Manual Linting:**
 
 ```bash
-uv run ruff check .
-uv run ruff format .
-uv run ty check
+uv run ruff check --exclude baselines --exclude MAGIC .
+uv run ruff format --check --exclude baselines --exclude MAGIC .
+uv run ty check --exclude baselines --exclude MAGIC .
 ```
 
 ## Containers

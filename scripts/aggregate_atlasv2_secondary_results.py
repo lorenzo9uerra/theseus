@@ -37,6 +37,7 @@ FLOAT_RE = r"([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
 MetricKey = str | tuple[str, ...]
 THESEUS_METRIC_KEYS: dict[str, MetricKey] = {
     "ap": "final_test_ap",
+    "auroc": "final_test_auroc",
     "precision": "final_test_precision",
     "f1": "final_test_binary_f1",
     "mcc": "final_test_mcc",
@@ -45,6 +46,7 @@ THESEUS_METRIC_KEYS: dict[str, MetricKey] = {
 }
 VELOX_METRIC_KEYS: dict[str, MetricKey] = {
     "ap": ("final_strict_ap", "final_ap"),
+    "auroc": ("final_strict_auc", "final_auc"),
     "precision": ("final_strict_precision", "final_precision"),
     "f1": ("final_strict_fscore", "final_fscore"),
     "mcc": ("final_strict_mcc", "final_mcc"),
@@ -131,7 +133,11 @@ def _aggregate_logs(
         extracted_metrics: dict[str, float] = {}
         try:
             for metric, key in key_map.items():
-                extracted_metrics[metric] = _extract_last_float(text, key)
+                try:
+                    extracted_metrics[metric] = _extract_last_float(text, key)
+                except ValueError:
+                    if metric != "auroc":
+                        raise
         except ValueError:
             skipped_files.append(str(path))
             continue
@@ -159,6 +165,8 @@ def _aggregate_logs(
         "metrics": {},
     }
     for metric, vals in values.items():
+        if not vals:
+            continue
         summary["metrics"][metric] = {
             "values": vals,
             "mean": statistics.mean(vals),
@@ -239,6 +247,11 @@ def _fmt_mean_std(entry: dict[str, Any]) -> str:
     return f"{entry['mean']:.4f} +- {entry['std']:.4f}"
 
 
+def _fmt_metric(summary: dict[str, Any], metric: str) -> str:
+    entry = summary["metrics"].get(metric)
+    return _fmt_mean_std(entry) if entry is not None else "N/A"
+
+
 def _format_markdown(
     *,
     theseus: dict[str, Any],
@@ -266,8 +279,8 @@ def _format_markdown(
         "",
         "## Main Table",
         "",
-        "| Host | Method | AP | Precision | F1 | MCC | ADP | FPR |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Host | Method | AP | AUROC | Precision | F1 | MCC | ADP | FPR |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     for dataset in ATLAS_DATASETS:
@@ -275,8 +288,8 @@ def _format_markdown(
             "| "
             + f"`{dataset}` | `Theseus` | "
             + " | ".join(
-                _fmt_mean_std(theseus[dataset]["metrics"][metric])
-                for metric in ("ap", "precision", "f1", "mcc", "adp", "fpr")
+                _fmt_metric(theseus[dataset], metric)
+                for metric in ("ap", "auroc", "precision", "f1", "mcc", "adp", "fpr")
             )
             + " |"
         )
@@ -284,14 +297,14 @@ def _format_markdown(
             "| "
             + f"`{dataset}` | `Velox` | "
             + " | ".join(
-                _fmt_mean_std(velox[dataset]["metrics"][metric])
-                for metric in ("ap", "precision", "f1", "mcc", "adp", "fpr")
+                _fmt_metric(velox[dataset], metric)
+                for metric in ("ap", "auroc", "precision", "f1", "mcc", "adp", "fpr")
             )
             + " |"
         )
         lines.append(
             "| "
-            + f"`{dataset}` | `Allowlist` | `N/A` | "
+            + f"`{dataset}` | `Allowlist` | `N/A` | `N/A` | "
             + f"`{allowlist[dataset]['precision']:.4f}` | "
             + f"`{allowlist[dataset]['f1']:.4f}` | "
             + f"`{allowlist[dataset]['mcc']:.4f}` | `N/A` | "

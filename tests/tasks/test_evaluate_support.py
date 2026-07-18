@@ -7,6 +7,7 @@ import torch
 from tasks.evaluate_support import (
     aggregate_to_entity_level,
     build_node_to_attack_mappings,
+    compute_auroc,
     compute_binary_metrics,
     find_threshold,
     inference_loop,
@@ -69,6 +70,16 @@ def test_threshold_predictions_use_exclusive_rule():
     predictions = threshold_predictions(np.array([0.1, 0.2, 0.3]), 0.2)
 
     assert predictions.tolist() == [0, 0, 1]
+
+
+def test_compute_auroc_uses_continuous_entity_scores():
+    auroc = compute_auroc(np.array([0, 0, 1, 1]), np.array([0.1, 0.4, 0.35, 0.8]))
+
+    assert auroc == pytest.approx(0.75)
+
+
+def test_compute_auroc_returns_zero_when_only_one_class_is_present():
+    assert compute_auroc(np.array([0, 0]), np.array([0.1, 0.2])) == 0.0
 
 
 def test_compute_binary_metrics_returns_expected_schema():

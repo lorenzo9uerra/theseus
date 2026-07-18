@@ -59,6 +59,7 @@ def test_main_training_path_dispatches_tasks(monkeypatch):
 
     main.main(config)
 
+    assert dummy_model.eval_called is True
     assert call_log == [
         ("set_seed", 123),
         ("train", ["train_graph"], ["val_graph"], ["test_graph"], ground_truth),
@@ -163,6 +164,7 @@ def test_main_uses_train_calibration_when_validation_split_is_empty(monkeypatch)
 
     main.main(config)
 
+    assert dummy_model.eval_called is True
     assert call_log == [
         ("set_seed", 123),
         ("train", ["train_graph"], [], ["test_graph"], ground_truth),

@@ -37,6 +37,7 @@ class EvaluationMetrics:
 @dataclass
 class DatasetStats:
     dataset: str
+    cmd_mode: str = "executable"
     vocab_size_train_cmd: int = 0
     vocab_size_train_path: int = 0
     novel_test_cmds: int = 0
@@ -345,10 +346,15 @@ def get_active_nodes(
 
 
 def analyze_dataset(
-    dataset_name: str, config: dict, data_dir: Path, ground_truth_dir: Path
+    dataset_name: str,
+    config: dict,
+    data_dir: Path,
+    ground_truth_dir: Path,
+    *,
+    cmd_mode: str = "executable",
 ) -> DatasetStats | None:
     """Execute analysis pipeline for a single dataset."""
-    logger.info(f"Analyzing {dataset_name}...")
+    logger.info(f"Analyzing {dataset_name} ({cmd_mode} command mode)...")
 
     proc_meta, uuid_to_id = load_process_metadata(dataset_name, data_dir)
     if not proc_meta:
@@ -372,16 +378,18 @@ def analyze_dataset(
     train_procs = train_nodes & proc_meta.keys()
     test_procs = test_nodes_all & proc_meta.keys()
 
-    train_cmds = {proc_meta[n][1] for n in train_procs if proc_meta[n][1]}
     train_paths = {proc_meta[n][0] for n in train_procs if proc_meta[n][0]}
 
-    def get_proc_name(cmd_str):
+    def get_cmd_feature(cmd_str):
         if not cmd_str:
             return ""
+        cmd_str = cmd_str.strip()
+        if cmd_mode == "full":
+            return cmd_str
         return cmd_str.split(" ")[0]
 
     train_cmds = {
-        get_proc_name(proc_meta[n][1]) for n in train_procs if proc_meta[n][1]
+        get_cmd_feature(proc_meta[n][1]) for n in train_procs if proc_meta[n][1]
     }
 
     flagged_nodes = set()
@@ -391,7 +399,7 @@ def analyze_dataset(
     for nid in test_procs:
         path, cmd = proc_meta[nid]
 
-        cmd_token = get_proc_name(cmd)
+        cmd_token = get_cmd_feature(cmd)
 
         if cmd_token:
             test_cmds.add(cmd_token)
@@ -436,6 +444,7 @@ def analyze_dataset(
 
     return DatasetStats(
         dataset=dataset_name,
+        cmd_mode=cmd_mode,
         vocab_size_train_cmd=len(train_cmds),
         vocab_size_train_path=len(train_paths),
         novel_test_cmds=novel_test_cmds,
@@ -454,7 +463,7 @@ def print_report(stats: DatasetStats):
     metrics = stats.metrics
 
     print(f"\n{'=' * 60}")
-    print(f"Dataset: {stats.dataset} Evaluation Report")
+    print(f"Dataset: {stats.dataset} Evaluation Report ({stats.cmd_mode} command mode)")
     print(f"{'=' * 60}")
     print("Stats:")
     print(f"  Process Nodes (Test): {stats.n_test_process}")
@@ -493,6 +502,7 @@ def save_csv_results(results: list[DatasetStats], output_path: str):
     for r in results:
         row = {
             "dataset": r.dataset,
+            "cmd_mode": r.cmd_mode,
             "train_cmd_vocab": r.vocab_size_train_cmd,
             "train_path_vocab": r.vocab_size_train_path,
             "test_novel_cmds": r.novel_test_cmds,
@@ -531,6 +541,15 @@ def main():
         "--output", default="outputs/allowlist_diagnostic.csv", help="CSV result path"
     )
     parser.add_argument(
+        "--cmd-mode",
+        choices=["executable", "full", "both"],
+        default="both",
+        help=(
+            "Command allowlist feature: executable name, full command line, or both "
+            "(default: both)."
+        ),
+    )
+    parser.add_argument(
         "--data-dir",
         type=Path,
         default=PROJECT_ROOT / "data" / "DARPA",
@@ -561,21 +580,32 @@ def main():
         get_all_datasets(args.config_dir) if args.all_datasets else [args.dataset]
     )
 
-    results = []
-    for ds_name in target_datasets:
-        try:
-            config = load_dataset_config(ds_name, args.config_dir)
-            stats = analyze_dataset(
-                ds_name, config, args.data_dir, args.ground_truth_dir
-            )
-            if stats:
-                print_report(stats)
-                results.append(stats)
-        except Exception as e:
-            logger.error(f"Failed to analyze {ds_name}: {e}")
+    modes = ["executable", "full"] if args.cmd_mode == "both" else [args.cmd_mode]
+    results_by_mode: dict[str, list[DatasetStats]] = {mode: [] for mode in modes}
 
-    if results:
-        save_csv_results(results, args.output)
+    for mode in modes:
+        for ds_name in target_datasets:
+            try:
+                config = load_dataset_config(ds_name, args.config_dir)
+                stats = analyze_dataset(
+                    ds_name, config, args.data_dir, args.ground_truth_dir, cmd_mode=mode
+                )
+                if stats:
+                    print_report(stats)
+                    results_by_mode[mode].append(stats)
+            except Exception as e:
+                logger.error(f"Failed to analyze {ds_name} ({mode}): {e}")
+
+    output_path = Path(args.output)
+    for mode, results in results_by_mode.items():
+        if not results:
+            continue
+        mode_output = output_path
+        if args.cmd_mode == "both" and mode == "full":
+            mode_output = output_path.with_name(
+                f"{output_path.stem}_full_command{output_path.suffix}"
+            )
+        save_csv_results(results, str(mode_output))
 
 
 if __name__ == "__main__":

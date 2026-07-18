@@ -171,7 +171,7 @@ Results are written to `results/<dataset>_seed<seed>.log`.
 For paper reproduction, use the **strict attack-chain** metrics reported in each
 evaluation log, where contaminated nodes are excluded from metric accounting.
 
-Key metrics: F1, AP, FPR, MCC, ADP (Attack Detection Precision).
+Key metrics: F1, AP, AUROC, FPR, MCC, ADP (Attack Detection Precision).
 
 ## Aggregating Results
 

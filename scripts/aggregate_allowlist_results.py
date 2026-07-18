@@ -68,6 +68,9 @@ def parse_csv(path: Path) -> list[dict[str, float | str]]:
                 if not dataset:
                     continue
                 parsed: dict[str, float | str] = {"dataset": dataset}
+                if "cmd_mode" in row:
+                    cmd_mode = str(row.get("cmd_mode", "executable")).strip()
+                    parsed["cmd_mode"] = cmd_mode or "executable"
                 for csv_key, metric_name in CSV_KEY_TO_METRIC.items():
                     value = row.get(csv_key)
                     if value in (None, ""):
@@ -115,7 +118,7 @@ def main() -> None:
     print(line)
     print()
 
-    dataset_to_rows: dict[str, list[dict[str, float | str]]] = {}
+    dataset_to_rows: dict[tuple[str, str], list[dict[str, float | str]]] = {}
     parsed_files = 0
     for path in files:
         rows = parse_csv(path)
@@ -124,17 +127,23 @@ def main() -> None:
         parsed_files += 1
         for row in rows:
             dataset = str(row["dataset"])
-            dataset_to_rows.setdefault(dataset, []).append(row)
+            cmd_mode = str(row.get("cmd_mode", "executable"))
+            dataset_to_rows.setdefault((dataset, cmd_mode), []).append(row)
 
-    for dataset in sorted(dataset_to_rows):
-        rows = dataset_to_rows[dataset]
+    for dataset, cmd_mode in sorted(dataset_to_rows):
+        rows = dataset_to_rows[(dataset, cmd_mode)]
         values: dict[str, list[float]] = {}
         for row in rows:
             for metric in METRICS:
                 value = row.get(metric)
                 if isinstance(value, float):
                     values.setdefault(metric, []).append(value)
-        _print_group(dataset=dataset, parsed=len(rows), found=len(rows), values=values)
+        _print_group(
+            dataset=f"{dataset} [{cmd_mode}]",
+            parsed=len(rows),
+            found=len(rows),
+            values=values,
+        )
 
     skipped = len(files) - parsed_files
     if skipped:

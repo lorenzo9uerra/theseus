@@ -27,6 +27,7 @@ def test_magic_aggregate_parser_accepts_strict_only_summary(tmp_path):
                 "Precision       0.1234",
                 "F1              0.1111",
                 "AP              0.2222",
+                "AUROC           0.2323",
                 "FPR             0.3333",
                 "MCC             0.4444",
                 "ADP             0.5555",
@@ -39,6 +40,7 @@ def test_magic_aggregate_parser_accepts_strict_only_summary(tmp_path):
         "Precision": 0.1234,
         "F1": 0.1111,
         "AP": 0.2222,
+        "AUROC": 0.2323,
         "FPR": 0.3333,
         "MCC": 0.4444,
         "ADP": 0.5555,
@@ -56,6 +58,7 @@ def test_magic_aggregate_parser_accepts_precision_from_final_results_block(tmp_p
             [
                 "FINAL TEST RESULTS",
                 "AP: 0.2222",
+                "ROC-AUC: 0.2323",
                 "PRECISION: 0.3333",
                 "SUMMARY",
                 "================================================================================",
@@ -72,6 +75,7 @@ def test_magic_aggregate_parser_accepts_precision_from_final_results_block(tmp_p
 
     assert module.parse_file(log_path) == {
         "AP": 0.2222,
+        "AUROC": 0.2323,
         "Precision": 0.3333,
         "F1": 0.1111,
         "FPR": 0.4444,
@@ -90,12 +94,14 @@ def test_pidsmaker_aggregate_parser_prefers_scope_neutral_metrics(tmp_path):
         "\n".join(
             [
                 "final_ap: 0.1111",
+                "final_auc: 0.1212",
                 "final_precision: 0.1234",
                 "final_fscore: 0.2222",
                 "final_mcc: 0.3333",
                 "final_fpr: 0.4444",
                 "final_adp_score: 0.5555",
                 "final_strict_ap: 0.9999",
+                "final_strict_auc: 0.9998",
             ]
         ),
         encoding="utf-8",
@@ -103,6 +109,7 @@ def test_pidsmaker_aggregate_parser_prefers_scope_neutral_metrics(tmp_path):
 
     assert module.parse_file(log_path) == {
         "AP": 0.1111,
+        "AUROC": 0.1212,
         "Precision": 0.1234,
         "F1": 0.2222,
         "MCC": 0.3333,
@@ -121,6 +128,7 @@ def test_pidsmaker_aggregate_parser_accepts_legacy_strict_metrics(tmp_path):
         "\n".join(
             [
                 "final_strict_ap: 0.1010",
+                "final_strict_auc: 0.1111",
                 "final_strict_precision: 0.1515",
                 "final_strict_fscore: 0.2020",
                 "final_strict_mcc: 0.3030",
@@ -133,6 +141,7 @@ def test_pidsmaker_aggregate_parser_accepts_legacy_strict_metrics(tmp_path):
 
     assert module.parse_file(log_path) == {
         "AP": 0.101,
+        "AUROC": 0.1111,
         "Precision": 0.1515,
         "F1": 0.202,
         "MCC": 0.303,
@@ -148,6 +157,7 @@ def test_theseus_aggregate_parser_accepts_precision(tmp_path):
         "\n".join(
             [
                 "final_test_ap: 0.1111",
+                "final_test_auroc: 0.1212",
                 "final_test_precision: 0.1234",
                 "final_test_binary_f1: 0.2222",
                 "final_test_mcc: 0.3333",
@@ -160,6 +170,7 @@ def test_theseus_aggregate_parser_accepts_precision(tmp_path):
 
     assert module.parse_file(log_path) == {
         "AP": 0.1111,
+        "AUROC": 0.1212,
         "Precision": 0.1234,
         "F1": 0.2222,
         "MCC": 0.3333,
@@ -240,7 +251,7 @@ def test_atlasv2_markdown_uses_paper_allowlist_label(tmp_path):
         return {
             "metrics": {
                 metric: {"mean": value, "std": 0.0}
-                for metric in ("ap", "precision", "f1", "mcc", "adp", "fpr")
+                for metric in ("ap", "auroc", "precision", "f1", "mcc", "adp", "fpr")
             }
         }
 

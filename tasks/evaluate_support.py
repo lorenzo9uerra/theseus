@@ -10,6 +10,7 @@ from sklearn.metrics import (
     precision_recall_curve,
     precision_score,
     recall_score,
+    roc_auc_score,
 )
 
 from utils.utils import log
@@ -24,6 +25,15 @@ def _safe_mcc(labels, predictions):
     if np.unique(labels).size < 2 or np.unique(predictions).size < 2:
         return 0.0
     return float(matthews_corrcoef(labels, predictions))
+
+
+def compute_auroc(labels, scores):
+    """Compute AUROC when both classes are present."""
+    labels = np.asarray(labels)
+    scores = np.asarray(scores)
+    if labels.size == 0 or scores.size == 0 or np.unique(labels).size < 2:
+        return 0.0
+    return float(roc_auc_score(labels, scores))
 
 
 def aggregate_to_entity_level(scores, labels, node_ids):
@@ -234,10 +244,11 @@ def compute_binary_metrics(labels, predictions, prefix, confusion_prefix):
 
 
 def compute_threshold_metrics(scores, labels, threshold):
-    """Compute thresholded binary metrics plus AP on scored entities."""
+    """Compute ranking and thresholded metrics on scored entities."""
     if labels.size == 0 or scores.size == 0:
         return {
             "ap": 0.0,
+            "auroc": 0.0,
             "mcc": 0.0,
             "precision": 0.0,
             "recall": 0.0,
@@ -262,9 +273,11 @@ def compute_threshold_metrics(scores, labels, threshold):
     mcc = _safe_mcc(labels, predictions)
     f1 = float(f1_score(labels, predictions, average="binary", zero_division=0))
     ap = float(average_precision_score(labels, scores)) if np.any(labels == 1) else 0.0
+    auroc = compute_auroc(labels, scores)
 
     return {
         "ap": ap,
+        "auroc": auroc,
         "mcc": mcc,
         "precision": precision,
         "recall": recall,

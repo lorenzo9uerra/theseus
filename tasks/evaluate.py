@@ -6,6 +6,7 @@ from sklearn.metrics import average_precision_score
 from tasks.evaluate_support import (
     aggregate_to_entity_level,
     build_node_to_attack_mappings,
+    compute_auroc,
     compute_binary_metrics,
     compute_threshold_metrics,
     inference_loop,
@@ -152,6 +153,7 @@ def evaluate(
         if test_labels.size > 0
         else 0.0
     )
+    test_auroc = compute_auroc(test_labels, test_scores)
     test_predictions = threshold_predictions(test_scores, threshold)
 
     metrics = {
@@ -160,6 +162,7 @@ def evaluate(
         "threshold": threshold,
         "threshold_source": threshold_source,
         "final_test_ap": test_ap,
+        "final_test_auroc": test_auroc,
     }
     metrics.update(
         compute_binary_metrics(

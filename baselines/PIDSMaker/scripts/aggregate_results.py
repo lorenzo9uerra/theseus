@@ -7,10 +7,11 @@ import statistics
 from pathlib import Path
 from typing import Optional
 
-METRICS: tuple[str, ...] = ("AP", "Precision", "F1", "MCC", "FPR", "ADP")
+METRICS: tuple[str, ...] = ("AP", "AUROC", "Precision", "F1", "MCC", "FPR", "ADP")
 
 RAW_KEY_TO_METRIC = {
     "ap": "AP",
+    "auc": "AUROC",
     "precision": "Precision",
     "fscore": "F1",
     "mcc": "MCC",
@@ -23,7 +24,7 @@ PIDSM_LOG_RE = re.compile(
 )
 
 FINAL_METRIC_RE = re.compile(
-    r"final_(?P<prefix>strict_)?(?P<key>ap|precision|fscore|mcc|fpr|adp_score)\b[:\s]+"
+    r"final_(?P<prefix>strict_)?(?P<key>ap|auc|precision|fscore|mcc|fpr|adp_score)\b[:\s]+"
     r"(?P<value>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
 )
 

@@ -11,7 +11,7 @@
     *   **Validation-based Threshold Setting**: Threshold set to the maximum benign validation score, then applied unchanged to test set.
     *   **Artifact Removal**: Removed CADETS collection artifacts as described in ["What We Talk About When We Talk About Logs"](https://ieeexplore.ieee.org/document/11023260).
 *   **Reported Metrics**:
-    *   AP, MCC, F1, ADP, FPR.
+    *   AP, AUROC, MCC, F1, ADP, FPR.
     *   For paper reproduction, use the **Strict Attack Chain** metrics, where contaminated nodes are excluded from metric accounting.
 
 ## Prerequisites
@@ -171,7 +171,7 @@ Logs are saved to `results/<system>_<dataset>_seed<seed>.log`.
 For paper reproduction, use the **Strict Attack Chain** metrics from each log,
 with contaminated nodes excluded from metric accounting.
 
-Key metrics: AP, MCC, F1, ADP, FPR.
+Key metrics: AP, AUROC, MCC, F1, ADP, FPR.
 
 ## Aggregating Results
 

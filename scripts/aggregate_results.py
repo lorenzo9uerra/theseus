@@ -6,7 +6,7 @@ import re
 import statistics
 from pathlib import Path
 
-METRICS: tuple[str, ...] = ("AP", "Precision", "F1", "MCC", "FPR", "ADP")
+METRICS: tuple[str, ...] = ("AP", "AUROC", "Precision", "F1", "MCC", "FPR", "ADP")
 
 LOG_NAME_RE = re.compile(r"^theseus_(?P<dataset>[A-Z]+_E\d+)_seed(?P<seed>\d+)\.log$")
 
@@ -17,6 +17,14 @@ KEY_VALUE_RE = re.compile(
 
 KEY_PRIORITIES: dict[str, tuple[str, ...]] = {
     "AP": ("final_test_ap", "final_strict_test_ap", "final_ap", "final_strict_ap"),
+    "AUROC": (
+        "final_test_auroc",
+        "final_strict_test_auroc",
+        "final_auroc",
+        "final_strict_auroc",
+        "final_test_auc",
+        "final_auc",
+    ),
     "Precision": (
         "final_test_precision",
         "final_strict_test_precision",

@@ -884,6 +884,7 @@ def strict_evaluation(
     print(f"{'Metric':<15} {'Strict Attack Chain':<20}")
     print(f"{'F1':<15} {test_f1:<20.4f}")
     print(f"{'AP':<15} {test_ap:<20.4f}")
+    print(f"{'AUROC':<15} {test_auc:<20.4f}")
     print(f"{'Precision':<15} {test_prec:<20.4f}")
     print(f"{'FPR':<15} {test_fpr:<20.4f}")
     print(f"{'MCC':<15} {test_mcc:<20.4f}")

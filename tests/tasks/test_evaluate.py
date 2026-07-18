@@ -59,6 +59,7 @@ def test_evaluate_excludes_contaminated_nodes_from_metrics(monkeypatch, tmp_path
     metrics = evaluate(LossOnlyModel(), val_data, test_data, config, ground_truth)
 
     assert metrics["threshold"] == pytest.approx(0.1)
+    assert metrics["final_test_auroc"] == pytest.approx(1.0)
     assert metrics["final_test_precision"] == pytest.approx(1.0)
     assert metrics["final_test_recall"] == pytest.approx(1.0)
     assert metrics["confusion_matrix_fp"] == 0

@@ -8,7 +8,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Optional
 
-METRICS: tuple[str, ...] = ("AP", "Precision", "F1", "MCC", "FPR", "ADP")
+METRICS: tuple[str, ...] = ("AP", "AUROC", "Precision", "F1", "MCC", "FPR", "ADP")
 
 DATASET_ALIASES = {
     "cadets": "CADETS_E3",
@@ -19,7 +19,7 @@ DATASET_ALIASES = {
 
 MAGIC_LOG_RE = re.compile(r"^(?P<dataset>[a-z]+)_seed(?P<seed>\d+)\.log$")
 SINGLE_VALUE_RE = re.compile(
-    r"^(?P<key>AP|PR-AUC|PRECISION|F1|FPR|MCC|ADP)\b[:\s]+"
+    r"^(?P<key>AP|PR-AUC|AUROC|ROC-AUC|AUC|PRECISION|F1|FPR|MCC|ADP)\b[:\s]+"
     r"(?P<value>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)$"
 )
 STRICT_F1_LINE_RE = re.compile(
@@ -33,6 +33,8 @@ def _normalize_metric_name(name: str) -> str:
     normalized = name.strip()
     if normalized == "PR-AUC":
         return "AP"
+    if normalized in {"AUC", "ROC-AUC"}:
+        return "AUROC"
     if normalized == "PRECISION":
         return "Precision"
     return normalized

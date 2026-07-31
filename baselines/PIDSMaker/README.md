@@ -1,18 +1,15 @@
 # Orthrus and Velox Baselines Implementation
 
-> Modified version of the [PIDSMaker framework](https://github.com/ubc-provenance/PIDSMaker/) (commit `2a73886`) used to reproduce the **Orthrus** and **Velox** baselines for our paper. PIDSMaker is the original framework developed by the authors of these models.
+This fork of [PIDSMaker](https://github.com/ubc-provenance/PIDSMaker/) at commit `2a73886` reproduces the Orthrus and Velox baselines.
 
-## Key Modifications
+## Changes from PIDSMaker
 
-*   **Removal of Postgres & Docker**: Data processing now uses **Polars** on Parquet/CSV files, removing the need for containerization.
-*   **Evaluation Protocol**:
-    *   **Process-only Evaluation**: Restricted evaluation to process nodes to align with the REAPR ground truth.
-    *   **Checkpoint Selection**: Early stopping and checkpoint selection based on AP on the validation set.
-    *   **Validation-based Threshold Setting**: Threshold set to the maximum benign validation score, then applied unchanged to test set.
-    *   **Artifact Removal**: Removed CADETS collection artifacts as described in ["What We Talk About When We Talk About Logs"](https://ieeexplore.ieee.org/document/11023260).
-*   **Reported Metrics**:
-    *   AP, AUROC, MCC, F1, ADP, FPR.
-    *   For paper reproduction, use the **Strict Attack Chain** metrics, where contaminated nodes are excluded from metric accounting.
+* Preprocessing reads the processed Parquet/CSV tables with Polars instead of PostgreSQL.
+* Evaluation is restricted to process nodes, with contaminated nodes excluded from strict metrics.
+* E3 checkpoint selection uses validation AP, and the decision threshold is the maximum benign validation score.
+* Confirmed Cadets collection artifacts are excluded from calibration and scoring, following [Liu et al.](https://ieeexplore.ieee.org/document/11023260).
+
+Reported metrics are AP, AUROC, precision, F1, MCC, ADP, and FPR.
 
 ## Prerequisites
 
@@ -30,7 +27,7 @@ PROJECT_ROOT/
 │   ├── FIVEDIRECTIONS_E3/
 │   ├── THEIA_E3/
 │   └── TRACE_E3/
-├── ground_truth/                      # REAPR ground-truth labels
+├── ground_truth/                      # REAPr ground-truth labels
 └── baselines/PIDSMaker/              # <- you are here
     ├── Makefile                       # One-command reproducibility
     ├── pyproject.toml                 # uv project definition + package metadata
@@ -40,9 +37,9 @@ PROJECT_ROOT/
     └── results/                       # Generated: evaluation logs
 ```
 
-## Using Zenodo Artifacts (Evaluation-only)
+## Evaluation from Zenodo Artifacts
 
-If you downloaded `pidsmaker_artifacts.tar.gz` from our Zenodo reproducibility repository (DOI: https://doi.org/10.5281/zenodo.19844784), you can reproduce the evaluation without re-running the full PIDSMaker pipeline. The bundled `results/` logs are sanitized release copies, with absolute local paths and wall-clock timestamps removed.
+The Zenodo [reproducibility artifacts](https://doi.org/10.5281/zenodo.21427594) provide retained PIDSMaker artifacts and canonical result logs in `pidsmaker_artifacts.tar.gz`.
 
 From `PROJECT_ROOT/`:
 
@@ -61,8 +58,7 @@ make eval RESULT_DIR=results_rerun  # Orthrus + Velox, eval-only (skip training)
 uv run python scripts/aggregate_results.py --log_dir results_rerun
 ```
 
-Writing to `results_rerun/` forces a fresh evaluation while preserving the
-canonical logs bundled under `results/`.
+This writes fresh evaluation logs to `results_rerun/` and preserves the canonical logs under `results/`.
 
 `make eval` still expects the processed E3 tables to be available at
 `PROJECT_ROOT/data/DARPA/`, because strict-label reconstruction maps REAPr UUIDs back to
@@ -180,7 +176,7 @@ Key metrics: AP, AUROC, MCC, F1, ADP, FPR.
 
 ## Aggregating Results
 
-Aggregate the per-seed logs in `results/` into mean ± std tables:
+Aggregate the canonical logs in `results/` into mean ± std tables:
 
 ```bash
 uv run python scripts/aggregate_results.py
@@ -188,6 +184,8 @@ uv run python scripts/aggregate_results.py
 # or, if uv is not on PATH on the execution node:
 ./.venv/bin/python scripts/aggregate_results.py --log_dir results
 ```
+
+Use `--log_dir results_rerun` to aggregate a fresh evaluation.
 
 ## Customisation
 

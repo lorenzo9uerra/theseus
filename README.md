@@ -12,26 +12,21 @@ Sync the project dependencies:
 uv sync
 ```
 
-For reproduction across heterogeneous systems, we also provide an optional container path for the main Theseus E3 pipeline in [containers/](./containers/), together with a GitHub Actions workflow for publishing the image to GHCR.
-
 ## Data Setup
 
-To facilitate reproducibility, we provide pre-processed datasets and artifacts. While it is possible to process the raw data from scratch (see [Manual Data Processing](#appendix-manual-data-processing) at the end of this document), we recommend using the Zenodo artifacts for immediate access.
+We provide processed datasets and evaluation artifacts on Zenodo. Raw-data processing instructions are included in [Manual Data Processing](#appendix-manual-data-processing).
 
 ### 1. Download Artifacts
 
 Download the following archives from Zenodo:
 
-* **Processed Datasets:** Contains the Parquet and CSV files derived from the raw JSON logs. We highly recommend using the Parquet version for faster loading times and stricter type handling.
+* **Processed datasets:** Parquet and CSV node and event tables derived from the raw JSON logs. The Parquet archive is recommended.
     * URL: [https://doi.org/10.5281/zenodo.18450778](https://doi.org/10.5281/zenodo.18450778)
     * Files: `DARPA-TC-E3-Parquet.zip`, `DARPA-TC-E3-CSV.zip`
 
-
-* **Reproducibility Artifacts:** Contains the cache, model checkpoints, retained baseline artifacts, and sanitized evaluation logs required to reproduce the exact results reported for each model without retraining.
-    * URL: [https://doi.org/10.5281/zenodo.19844784](https://doi.org/10.5281/zenodo.19844784)
+* **Reproducibility artifacts:** Cache files, model checkpoints, retained baseline artifacts, and sanitized evaluation logs for the reported results.
+    * URL: [https://doi.org/10.5281/zenodo.21427594](https://doi.org/10.5281/zenodo.21427594)
     * Files: `theseus_artifacts.tar.gz`, `magic_artifacts.tar.gz`, `pidsmaker_artifacts.tar.gz`, `atlasv2_artifacts.tar.gz`
-
-
 
 ### 2. Extract and Configure
 
@@ -55,12 +50,12 @@ mkdir -p atlas_bundle
 tar -xzf atlasv2_artifacts.tar.gz -C atlas_bundle/
 ```
 
-**Ground Truth Data**
-This project uses the [REAPr](https://bitbucket.org/sts-lab/reapr-ground-truth) ground truth (Liu et al.) at commit `e726c01` (July 2026). The E3 process labels under `ground_truth/` normalize one duplicated Cadets attack-chain identifier in the upstream file; this does not change any process UUID or attack/contaminated assignment. The ATLASv2 artifact carries the revised UUID-based labels under `atlas_bundle/ground_truth/atlasv2/`.
+### Ground Truth
 
-The reported E3 protocol uses process-level labels as the common scoring target across Cadets, FiveDirections, Theia, and Trace. The edge-label archives released for Cadets, FiveDirections, and Theia are not used because Trace has no corresponding release and adopting them would change the scoring target and system interfaces rather than simply relabel the existing evaluation.
+This project uses [REAPr](https://bitbucket.org/sts-lab/reapr-ground-truth) ground truth at commit `e726c01`. The E3 labels under `ground_truth/` normalize one duplicated Cadets attack-chain identifier without changing process UUIDs or label assignments. The ATLASv2 artifact contains UUID-based labels under `atlas_bundle/ground_truth/atlasv2/`.
 
-**Expected Directory Structure**
+### Expected Directory Structure
+
 Ensure your project structure looks like this before proceeding:
 
 ```text
@@ -137,17 +132,12 @@ used for the paper's secondary-benchmark analysis.
 
 After extracting `atlasv2_artifacts.tar.gz` into `atlas_bundle/` as shown above:
 
-* the staged payload includes:
-  * processed ATLAS parquet tables under `atlas_bundle/data/ATLASV2/`
-  * revised UUID-based process labels under `atlas_bundle/ground_truth/atlasv2/`
-  * sanitized canonical result logs, including AP and AUROC, under `atlas_bundle/results/`
-  * deterministic allowlist diagnostic CSVs under `atlas_bundle/outputs/`
-  * Theseus ATLAS cache/checkpoint payloads under `atlas_bundle/theseus/`
-  * eval-only Velox artifacts under `atlas_bundle/pidsmaker/`
-
-The public ATLASv2 bundle intentionally excludes raw Slurm logs. It contains the
-sanitized canonical result logs used for the paper table, together with the staged
-caches, checkpoints, and baseline artifacts needed to rerun the evaluation locally.
+* processed ATLAS parquet tables under `atlas_bundle/data/ATLASV2/`
+* UUID-based process labels under `atlas_bundle/ground_truth/atlasv2/`
+* canonical result logs under `atlas_bundle/results/`
+* deterministic allowlist outputs under `atlas_bundle/outputs/`
+* Theseus caches and checkpoints under `atlas_bundle/theseus/`
+* eval-only Velox artifacts under `atlas_bundle/pidsmaker/`
 
 To reconstruct the exact paper table from the packaged canonical results:
 
@@ -171,10 +161,6 @@ This script:
 * aggregates everything into:
   * `outputs/atlasv2_secondary_benchmark_summary.json`
   * `outputs/atlasv2_secondary_benchmark_summary.md`
-
-The current scripts write allowlist outputs as `*_allowlist_diagnostic.csv`.
-The ATLASv2 aggregation and packaging utilities also accept the older
-`*_binary_allowlist.csv` filenames used by pre-rename bundles.
 
 ### 1.2 Runtime Profile
 
@@ -240,9 +226,7 @@ Reproduction instructions for the baseline systems are provided in their respect
 * **Magic:** See [baselines/MAGIC/](baselines/MAGIC/)
 * **Orthrus and Velox:** See [baselines/PIDSMaker/](baselines/PIDSMaker/)
 
-Both baselines use `uv` for dependency management and include Makefiles for one-command reproducibility.
-Their README files also document the cluster-safe fallback of invoking
-`./.venv/bin/python ...` directly when `uv` is not available on worker-node `PATH`.
+Both baselines use separate `uv` environments and provide Makefiles for evaluation and retraining.
 
 After extracting `magic_artifacts.tar.gz` / `pidsmaker_artifacts.tar.gz`, these
 commands reproduce the Magic row and the Orthrus/Velox rows of the E3 main
@@ -283,12 +267,6 @@ make all
 uv run python scripts/aggregate_results.py
 ```
 
-PIDSMaker's retained evaluation logs use the legacy key `final_auc` for AUROC.
-
-For targeted reruns, `baselines/MAGIC/README.md` documents `make train` and
-single-seed `train.py` commands, while `baselines/PIDSMaker/README.md` documents
-`make orthrus`, `make velox`, and single-run `pidsmaker/main.py` commands.
-
 ## Development
 
 For researchers intending to modify or extend the code, install the development dependencies:
@@ -321,11 +299,9 @@ uv run ruff format --check --exclude baselines --exclude MAGIC .
 uv run ty check --exclude baselines --exclude MAGIC .
 ```
 
-## Containers
+## Container
 
-We provide an optional Docker-based container path for the main Theseus E3 pipeline in [containers/](./containers/), together with a GitHub Actions workflow that can publish the image to GHCR. The canonical workflow remains the standard `uv.lock`-based setup; the container is an additional convenience for evaluators running the main Theseus path on heterogeneous systems. Baselines and the full ATLASv2 eval-only release path remain on the native workflow for now.
-
-Published images use the GHCR path `ghcr.io/lorenzo9uerra/theseus:<tag>`. For artifact evaluation, prefer a pinned `sha-<commit>` tag over `latest`.
+An optional Docker recipe for the main Theseus E3 evaluation is provided in [containers/](./containers/). Magic, PIDSMaker, and the ATLASv2 evaluation use the native environments documented above.
 
 ## Appendix: Manual Data Processing
 

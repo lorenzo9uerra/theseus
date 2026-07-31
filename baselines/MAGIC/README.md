@@ -1,6 +1,6 @@
 # Magic Baseline Implementation
 
-> Reproducible pipeline for training and evaluating the Magic baseline on DARPA TC Engagement 3 datasets.
+This fork reproduces the Magic baseline on the DARPA TC Engagement 3 datasets.
 
 ## Prerequisites
 
@@ -13,13 +13,13 @@
 
 ```
 PROJECT_ROOT/
-├── data/DARPA/                        # Raw DARPA TC E3 data (Parquet/CSV)
+├── data/DARPA/                        # Processed E3 node/event tables
 │   ├── CADETS_E3/
 │   ├── FIVEDIRECTIONS_E3/
 │   ├── THEIA_E3/
 │   └── TRACE_E3/
 ├── ground_truth/reapr-ground-truth/
-│   └── darpa-tc-engagement3/          # REAPR ground-truth labels
+│   └── darpa-tc-engagement3/          # REAPr ground-truth labels
 │       ├── cadets_labels.csv
 │       ├── fivedirections_labels.csv
 │       ├── theia_labels.csv
@@ -33,9 +33,9 @@ PROJECT_ROOT/
     └── results/                       # Generated: evaluation logs
 ```
 
-## Using Zenodo Artifacts (Evaluation-only)
+## Evaluation from Zenodo Artifacts
 
-If you downloaded `magic_artifacts.tar.gz` from our Zenodo reproducibility repository (DOI: https://doi.org/10.5281/zenodo.19844784), you can reproduce the evaluation without re-parsing data or re-training the model. The bundled `results/` logs are sanitized release copies, with absolute local paths and wall-clock timestamps removed.
+The Zenodo [reproducibility artifacts](https://doi.org/10.5281/zenodo.21427594) provide processed Magic graphs, checkpoints, and canonical result logs in `magic_artifacts.tar.gz`.
 
 From `PROJECT_ROOT/`:
 
@@ -51,8 +51,7 @@ make eval RESULT_DIR=results_rerun
 uv run python utils/aggregate_results.py --log_dir results_rerun
 ```
 
-Writing to `results_rerun/` forces a fresh evaluation while preserving the
-canonical logs bundled under `results/`.
+This writes fresh evaluation logs to `results_rerun/` and preserves the canonical logs under `results/`.
 
 If the extracted bundle already contains `results/`, you can skip `make eval` and aggregate directly:
 
@@ -69,23 +68,20 @@ directly from the built virtual environment:
 ./.venv/bin/python utils/aggregate_results.py
 ```
 
-## Quick Start (One Command)
+## Full Pipeline
 
 From the `baselines/MAGIC/` directory:
 
 ```bash
-# 1. Create the uv environment (one-time)
 make setup
-
-# 2. Run the full pipeline: data -> train -> eval
 make all
 ```
 
 This will:
 
-1. Parse the raw DARPA datasets into daily DGL graphs (-> `data/<dataset>/`).
-2. Train MAGIC on each dataset with seeds {71, 83, 232, 441, 915} (-> `checkpoints/`).
-3. Evaluate every checkpoint and save logs (-> `results/`).
+1. Convert the processed E3 tables into daily DGL graphs.
+2. Train Magic with seeds {71, 83, 232, 441, 915}.
+3. Evaluate each checkpoint and write logs under `results/`.
 
 ## Step-by-Step Reproduction
 
@@ -109,7 +105,7 @@ an interactive shell, then run later commands with `./.venv/bin/python ...`.
 make data
 ```
 
-Parses each DARPA TC E3 dataset into daily graph snapshots (DGL format) with two-level ground-truth labels. Expects raw data in `PROJECT_ROOT/data/DARPA/` and ground truth in `PROJECT_ROOT/ground_truth/reapr-ground-truth/darpa-tc-engagement3/`.
+Converts each processed E3 dataset into daily DGL graph snapshots with attack and contaminated labels. It expects node and event tables in `PROJECT_ROOT/data/DARPA/` and ground truth in `PROJECT_ROOT/ground_truth/reapr-ground-truth/darpa-tc-engagement3/`.
 
 Override paths if your data is elsewhere:
 ```bash
@@ -180,7 +176,7 @@ Key metrics: F1, AP, AUROC, FPR, MCC, ADP (Attack Detection Precision).
 
 ## Aggregating Results
 
-Aggregate the per-seed logs in `results/` into mean ± std tables:
+Aggregate the canonical logs in `results/` into mean ± std tables:
 
 ```bash
 uv run python utils/aggregate_results.py
@@ -189,12 +185,14 @@ uv run python utils/aggregate_results.py
 ./.venv/bin/python utils/aggregate_results.py --log_dir results
 ```
 
+Use `--log_dir results_rerun` to aggregate a fresh evaluation.
+
 ## Customisation
 
 | Variable | Default | Description |
 |---|---|---|
 | `DATA_DIR` | `PROJECT_ROOT/data/DARPA` | Raw data location |
-| `GROUND_TRUTH_DIR` | `PROJECT_ROOT/ground_truth/...` | REAPR labels |
+| `GROUND_TRUTH_DIR` | `PROJECT_ROOT/ground_truth/...` | REAPr labels |
 | `DEVICE` | -1 | GPU device id (-1 = CPU) |
 | `SEEDS` | 71 83 232 441 915 | Seeds to train/eval |
 | `DATASETS` | cadets fivedirections theia trace | Datasets to process |

@@ -17,6 +17,8 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from utils.ground_truth import load_atlasv2_process_labels  # noqa: E402
+
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
@@ -194,9 +196,10 @@ def _infer_atlas_host(node_uuid: str) -> str | None:
 def load_atlasv2_ground_truth_ids(
     dataset_name: str, data_dir: Path, ground_truth_dir: Path
 ) -> tuple[set[str], set[str], set[str]]:
-    labels_csv = ground_truth_dir / "atlasv2_labels.csv"
-    if not labels_csv.exists():
-        logger.warning("ATLASv2 ground truth file missing: %s", labels_csv)
+    try:
+        labels = load_atlasv2_process_labels(ground_truth_dir)
+    except ValueError as exc:
+        logger.warning("%s", exc)
         return set(), set(), set()
 
     process_path = data_dir / dataset_name / "process_node_table.parquet"
@@ -206,6 +209,7 @@ def load_atlasv2_ground_truth_ids(
 
     by_attack_pid_path: dict[tuple[str, int, str], set[str]] = {}
     by_host_pid_path: dict[tuple[str, int, str], set[str]] = {}
+    by_process_uuid: dict[str, set[str]] = {}
 
     for row in process_df.iter_rows(named=True):
         idx = row.get("index_id")
@@ -215,13 +219,16 @@ def load_atlasv2_ground_truth_ids(
         node_uuid = (row.get("node_uuid") or "").strip()
         host = _infer_atlas_host(node_uuid)
 
-        if idx is None or pid is None or not path:
+        if idx is None:
             continue
 
         idx_str = str(idx)
-        if attack_id:
+        process_uuid = node_uuid.split("|")[-1].strip().lower()
+        if process_uuid:
+            by_process_uuid.setdefault(process_uuid, set()).add(idx_str)
+        if attack_id and pid is not None and path:
             by_attack_pid_path.setdefault((attack_id, pid, path), set()).add(idx_str)
-        if host:
+        if host and pid is not None and path:
             by_host_pid_path.setdefault((host, pid, path), set()).add(idx_str)
 
     dataset_host = dataset_name.split("_", 1)[1].lower()
@@ -229,38 +236,44 @@ def load_atlasv2_ground_truth_ids(
     contaminated_ids: set[str] = set()
     missing = 0
 
-    with open(labels_csv, newline="") as f:
-        reader = csv.DictReader(f)
-        for raw_row in reader:
-            if not raw_row:
-                continue
+    for process_label in labels:
+        if not process_label.attack_id.startswith(f"atlasv2/{dataset_host}-"):
+            continue
 
-            row = {
-                (key or "").strip().lower(): (value or "").strip()
-                for key, value in raw_row.items()
-            }
-            attack_id = row.get("attack", "")
-            label = row.get("label", "").lower()
-            pid = _safe_int(row.get("process_id"))
-            path = _normalize_windows_path(row.get("process_name", ""))
-
-            if not attack_id.startswith(f"atlasv2/{dataset_host}-"):
-                continue
-            if label not in {"attack", "contaminated"} or pid is None or not path:
-                continue
-
-            matches = by_attack_pid_path.get((attack_id, pid, path))
+        if process_label.process_uuid:
+            matches = by_process_uuid.get(process_label.process_uuid)
+            if matches and len(matches) > 1:
+                raise ValueError(
+                    f"ATLASv2 process UUID '{process_label.process_uuid}' "
+                    f"maps to multiple process nodes"
+                )
+        elif process_label.pid is None:
+            matches = None
+        else:
+            matches = by_attack_pid_path.get(
+                (
+                    process_label.attack_id,
+                    process_label.pid,
+                    _normalize_windows_path(process_label.path),
+                )
+            )
             if not matches:
-                matches = by_host_pid_path.get((dataset_host, pid, path))
+                matches = by_host_pid_path.get(
+                    (
+                        dataset_host,
+                        process_label.pid,
+                        _normalize_windows_path(process_label.path),
+                    )
+                )
 
-            if not matches:
-                missing += 1
-                continue
+        if not matches:
+            missing += 1
+            continue
 
-            if label == "attack":
-                attack_ids.update(matches)
-            else:
-                contaminated_ids.update(matches)
+        if process_label.label == "attack":
+            attack_ids.update(matches)
+        else:
+            contaminated_ids.update(matches)
 
     if missing:
         logger.info("ATLASv2 labels unmatched for %s: %d rows", dataset_name, missing)

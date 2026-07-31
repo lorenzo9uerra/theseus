@@ -174,6 +174,34 @@ def test_build_graphs_cache_path_relabels_and_skips_heavy_dependencies(monkeypat
     assert relabel_calls == [(cached_graphs, {7, 8})]
 
 
+def test_build_graphs_cache_path_refreshes_atlasv2_ground_truth(monkeypatch):
+    config = make_config()
+    config.dataset = "atlasv2_h1"
+    config.dataset_info.name = "atlasv2_h1"
+    cached_graphs = {"train": [], "val": [], "test": ["cached"]}
+    cached_ground_truth = {"old": {"nids": [7], "contaminated_nids": [8]}}
+    revised_ground_truth = {"revised": {"nids": [11], "contaminated_nids": []}}
+    relabel_calls = []
+
+    monkeypatch.setattr(
+        "tasks.build_graphs.load_graph_cache",
+        lambda cache_dir, dataset_name, cfg: (cached_graphs, cached_ground_truth),
+    )
+    monkeypatch.setattr(
+        "tasks.build_graphs.get_ground_truth", lambda cfg: revised_ground_truth
+    )
+    monkeypatch.setattr(
+        "tasks.build_graphs.relabel_graphs",
+        lambda graphs, malicious_nodes: relabel_calls.append((graphs, malicious_nodes)),
+    )
+
+    graphs, filtered_ground_truth = build_graphs(config)
+
+    assert graphs is cached_graphs
+    assert filtered_ground_truth == revised_ground_truth
+    assert relabel_calls == [(cached_graphs, {11})]
+
+
 def test_build_graphs_wraps_ground_truth_loading_errors(monkeypatch):
     config = make_config()
 

@@ -194,6 +194,8 @@ def test_collect_label_alignment_report_tracks_exact_fallback_and_misses(
     assert host_report["duplicate_attack_rows"] == 1
     assert host_report["raw_contaminated_rows"] == 1
     assert host_report["contaminated_match_counts"] == {
+        "uuid_unique": 0,
+        "uuid_ambiguous": 0,
         "exact_unique": 0,
         "exact_ambiguous": 0,
         "host_fallback_unique": 0,
@@ -202,6 +204,8 @@ def test_collect_label_alignment_report_tracks_exact_fallback_and_misses(
     }
     assert host_report["matched_node_ids_from_contaminated_rows"] == 0
     assert host_report["unique_match_counts"] == {
+        "uuid_unique": 0,
+        "uuid_ambiguous": 0,
         "exact_unique": 1,
         "exact_ambiguous": 1,
         "host_fallback_unique": 1,
@@ -209,6 +213,53 @@ def test_collect_label_alignment_report_tracks_exact_fallback_and_misses(
         "unmatched": 1,
     }
     assert host_report["matched_node_ids_from_unique_attack_rows"] == 6
+
+
+def test_collect_label_alignment_report_uses_process_uuid_without_fallback(
+    tmp_path: Path,
+) -> None:
+    atlas_root = tmp_path / "ATLASV2"
+    dataset_dir = atlas_root / "atlasv2_h1"
+    _write_parquet(
+        dataset_dir / "process_node_table.parquet",
+        [
+            {
+                "index_id": 1,
+                "node_uuid": "WIN-32-H1|guid1",
+                "path": r"C:\foo.exe",
+                "pid": 10,
+                "attack": "atlasv2/h1-s1",
+            },
+            {
+                "index_id": 2,
+                "node_uuid": "WIN-32-H1|guid2",
+                "path": r"C:\foo.exe",
+                "pid": 10,
+                "attack": "atlasv2/h1-s1",
+            },
+        ],
+    )
+    label_rows = [
+        AtlasLabelRow(
+            "atlasv2/h1-s1", "h1", 10, "c:/foo.exe", "attack", process_uuid="guid2"
+        ),
+        AtlasLabelRow(
+            "atlasv2/h1-s1",
+            "h1",
+            10,
+            "c:/foo.exe",
+            "attack",
+            process_uuid="missing-guid",
+        ),
+    ]
+
+    report = collect_label_alignment_report(atlas_root, ["atlasv2_h1"], label_rows)
+    host_report = report["atlasv2_h1"]
+
+    assert host_report["unique_match_counts"]["uuid_unique"] == 1
+    assert host_report["unique_match_counts"]["unmatched"] == 1
+    assert host_report["unique_match_counts"]["exact_ambiguous"] == 0
+    assert host_report["matched_node_ids_from_unique_attack_rows"] == 1
 
 
 def test_collect_raw_reports_capture_spillover_and_repeated_prefixes(

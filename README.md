@@ -56,7 +56,9 @@ tar -xzf atlasv2_artifacts.tar.gz -C atlas_bundle/
 ```
 
 **Ground Truth Data**
-This project uses the [REAPr](https://bitbucket.org/sts-lab/reapr-ground-truth) ground truth (Liu et al.). The necessary files are already included in this repository under the `ground_truth/` directory (Commit ID: `b67da6b`). No further action is required.
+This project uses the [REAPr](https://bitbucket.org/sts-lab/reapr-ground-truth) ground truth (Liu et al.) at commit `e726c01` (July 2026). The E3 process labels under `ground_truth/` normalize one duplicated Cadets attack-chain identifier in the upstream file; this does not change any process UUID or attack/contaminated assignment. The ATLASv2 artifact carries the revised UUID-based labels under `atlas_bundle/ground_truth/atlasv2/`.
+
+The reported E3 protocol uses process-level labels as the common scoring target across Cadets, FiveDirections, Theia, and Trace. The edge-label archives released for Cadets, FiveDirections, and Theia are not used because Trace has no corresponding release and adopting them would change the scoring target and system interfaces rather than simply relabel the existing evaluation.
 
 **Expected Directory Structure**
 Ensure your project structure looks like this before proceeding:
@@ -85,6 +87,7 @@ If you also extracted `atlasv2_artifacts.tar.gz`, the staged ATLAS payload will 
 theseus/
 ├── atlas_bundle/
 │   ├── data/ATLASV2/
+│   ├── ground_truth/atlasv2/
 │   ├── pidsmaker/
 │   └── theseus/
 └── ...
@@ -136,6 +139,7 @@ After extracting `atlasv2_artifacts.tar.gz` into `atlas_bundle/` as shown above:
 
 * the staged payload includes:
   * processed ATLAS parquet tables under `atlas_bundle/data/ATLASV2/`
+  * revised UUID-based process labels under `atlas_bundle/ground_truth/atlasv2/`
   * sanitized canonical result logs, including AP and AUROC, under `atlas_bundle/results/`
   * deterministic allowlist diagnostic CSVs under `atlas_bundle/outputs/`
   * Theseus ATLAS cache/checkpoint payloads under `atlas_bundle/theseus/`
@@ -247,16 +251,21 @@ table:
 ```bash
 cd baselines/MAGIC
 make setup
-make eval
-uv run python utils/aggregate_results.py
+make eval RESULT_DIR=results_rerun
+uv run python utils/aggregate_results.py --log_dir results_rerun
 
 cd ../PIDSMaker
 make setup
 ln -sf ../../data data
 ln -sf ../../ground_truth ground_truth
-make eval
-uv run python scripts/aggregate_results.py
+make eval RESULT_DIR=results_rerun
+uv run python scripts/aggregate_results.py --log_dir results_rerun
 ```
+
+Using a separate result directory forces a fresh evaluation while preserving the
+canonical logs bundled with the artifacts. To reconstruct the paper table directly
+from those bundled logs, skip `make eval` and run each aggregation command without
+`--log_dir`.
 
 To retrain the baselines from scratch instead of using the released checkpoints:
 

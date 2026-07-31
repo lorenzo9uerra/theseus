@@ -1,8 +1,19 @@
 import csv
 import os
 from collections import defaultdict
+from dataclasses import dataclass
+from pathlib import Path
 
 from utils.utils import log, read_node_table
+
+
+@dataclass(frozen=True)
+class AtlasProcessLabel:
+    attack_id: str
+    process_uuid: str
+    pid: int | None
+    path: str
+    label: str
 
 
 def _get_reapr_dir(root_dir: str) -> str:
@@ -67,25 +78,32 @@ def _infer_host_from_device_name(device_name: str) -> str | None:
     return None
 
 
-def _get_atlasv2_labels_csv_path(config) -> str | None:
+def _get_atlasv2_labels_dir() -> str | None:
+    override = os.environ.get("ATLASV2_LABEL_DIR")
+    if override:
+        override = os.path.abspath(override)
+        return override if os.path.isdir(override) else None
+
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     atlas_dir = _get_atlasv2_dir(repo_root)
-    if not atlas_dir:
-        return None
-    csv_path = os.path.join(atlas_dir, "atlasv2_labels.csv")
-    return csv_path if os.path.isfile(csv_path) else None
+    return atlas_dir or None
 
 
-def _parse_atlasv2_process_labels(
-    csv_path: str,
-) -> dict[str, dict[str, list[tuple[int, str]]]]:
-    """Parse ATLASv2 process labels into attack/contaminated process buckets."""
-    attack_to_processes: dict[str, dict[str, list[tuple[int, str]]]] = defaultdict(
-        lambda: {"attack": [], "contaminated": []}
-    )
+def _normalize_atlas_attack_id(attack_id: str) -> str:
+    attack_id = (attack_id or "").strip().lower()
+    if attack_id and not attack_id.startswith("atlasv2/"):
+        attack_id = f"atlasv2/{attack_id}"
+    return attack_id
 
-    with open(csv_path, newline="") as file:
-        reader = csv.DictReader(file)
+
+def _atlas_process_uuid_key(process_uuid: str) -> str:
+    return (process_uuid or "").strip().split("|")[-1].lower()
+
+
+def _parse_atlasv2_label_file(label_path: Path) -> list[AtlasProcessLabel]:
+    labels: list[AtlasProcessLabel] = []
+    with label_path.open(newline="") as file:
+        reader = csv.DictReader(file, skipinitialspace=True)
         for raw_row in reader:
             if not raw_row:
                 continue
@@ -94,32 +112,64 @@ def _parse_atlasv2_process_labels(
                 (key or "").strip().lower(): (value or "").strip()
                 for key, value in raw_row.items()
             }
-            attack_id = row.get("attack", "")
+            attack_id = _normalize_atlas_attack_id(row.get("attack", ""))
             label = row.get("label", "").lower()
             pid = _safe_int(row.get("process_id"))
             path = _normalize_windows_path(row.get("process_name", ""))
+            process_uuid = _atlas_process_uuid_key(row.get("process_uuid", ""))
 
-            if not attack_id or pid is None or not path:
+            if not attack_id:
                 continue
             if label not in {"attack", "contaminated"}:
                 continue
+            if not process_uuid and (pid is None or not path):
+                continue
 
-            attack_to_processes[attack_id][label].append((pid, path))
+            labels.append(
+                AtlasProcessLabel(
+                    attack_id=attack_id,
+                    process_uuid=process_uuid,
+                    pid=pid,
+                    path=path,
+                    label=label,
+                )
+            )
+    return labels
 
-    return {
-        attack_id: {
-            "attack": list(labelled["attack"]),
-            "contaminated": list(labelled["contaminated"]),
-        }
-        for attack_id, labelled in attack_to_processes.items()
-    }
+
+def load_atlasv2_process_labels(labels_dir: str | Path) -> list[AtlasProcessLabel]:
+    """Load revised UUID labels, falling back to the frozen legacy CSV."""
+    labels_dir = Path(labels_dir)
+    revised_files = sorted(labels_dir.glob("*.labels"))
+    if revised_files:
+        labels = [
+            label
+            for label_path in revised_files
+            for label in _parse_atlasv2_label_file(label_path)
+        ]
+        log(
+            f"ATLASv2 labels: loaded {len(labels)} rows from "
+            f"{len(revised_files)} revised UUID label files"
+        )
+        return labels
+
+    legacy_path = labels_dir / "atlasv2_labels.csv"
+    if not legacy_path.is_file():
+        raise ValueError(
+            f"ATLASv2 ground truth not found under {labels_dir} "
+            "(expected *.labels or atlasv2_labels.csv)."
+        )
+
+    labels = _parse_atlasv2_label_file(legacy_path)
+    log(f"ATLASv2 labels: loaded {len(labels)} rows from legacy CSV")
+    return labels
 
 
 def _get_atlasv2_ground_truth(config):
     """Load ATLASv2 process-node ground truth and map it to node index IDs."""
-    labels_csv = _get_atlasv2_labels_csv_path(config)
-    if not labels_csv:
-        raise ValueError("ATLASv2 ground truth not found (missing atlasv2_labels.csv).")
+    labels_dir = _get_atlasv2_labels_dir()
+    if not labels_dir:
+        raise ValueError("ATLASv2 ground truth directory not found.")
 
     data_dir = os.path.join(config.data_dir, config.dataset)
     process_df = read_node_table(
@@ -132,6 +182,7 @@ def _get_atlasv2_ground_truth(config):
 
     by_attack_pid_path: dict[tuple[str, int, str], set[int]] = defaultdict(set)
     by_host_pid_path: dict[tuple[str, int, str], set[int]] = defaultdict(set)
+    by_process_uuid: dict[str, set[int]] = defaultdict(set)
 
     for row in process_df.iter_rows(named=True):
         idx = _safe_int(row.get("index_id"))
@@ -142,17 +193,21 @@ def _get_atlasv2_ground_truth(config):
         device_name = node_uuid.split("|", 1)[0] if "|" in node_uuid else ""
         host = _infer_host_from_device_name(device_name)
 
-        if idx is None or pid is None or not path:
+        if idx is None:
             continue
 
-        if attack_id:
+        process_uuid = _atlas_process_uuid_key(node_uuid)
+        if process_uuid:
+            by_process_uuid[process_uuid].add(int(idx))
+
+        if attack_id and pid is not None and path:
             by_attack_pid_path[(attack_id, pid, path)].add(int(idx))
-        if host:
+        if host and pid is not None and path:
             by_host_pid_path[(host, pid, path)].add(int(idx))
 
     del process_df
 
-    attack_to_labels = _parse_atlasv2_process_labels(labels_csv)
+    labels = load_atlasv2_process_labels(labels_dir)
 
     dataset_host = _infer_atlas_host_from_dataset_name(config.dataset_info.name)
     if dataset_host not in {"h1", "h2"}:
@@ -161,40 +216,62 @@ def _get_atlasv2_ground_truth(config):
         )
 
     attack_metadata = {}
+    host_labels = [
+        label
+        for label in labels
+        if label.attack_id.startswith(f"atlasv2/{dataset_host}-")
+    ]
+    labels_by_attack: dict[str, list[AtlasProcessLabel]] = defaultdict(list)
+    for label in host_labels:
+        labels_by_attack[label.attack_id].append(label)
 
-    for attack_id, process_labels in attack_to_labels.items():
-        if not attack_id.startswith(f"atlasv2/{dataset_host}-"):
-            continue
-
+    for attack_id, process_labels in labels_by_attack.items():
         attack_node_ids: set[int] = set()
         contaminated_node_ids: set[int] = set()
         attack_missing = 0
         contaminated_missing = 0
 
-        for label_name, target_ids in [
-            ("attack", attack_node_ids),
-            ("contaminated", contaminated_node_ids),
-        ]:
-            for pid, path in process_labels.get(label_name, []):
-                matches = by_attack_pid_path.get((attack_id, pid, path))
+        for process_label in process_labels:
+            target_ids = (
+                attack_node_ids
+                if process_label.label == "attack"
+                else contaminated_node_ids
+            )
+            if process_label.process_uuid:
+                matches = by_process_uuid.get(process_label.process_uuid, set())
+                if len(matches) > 1:
+                    raise ValueError(
+                        f"ATLASv2 process UUID '{process_label.process_uuid}' "
+                        f"maps to multiple nodes: {sorted(matches)}"
+                    )
+            elif process_label.pid is None:
+                matches = set()
+            else:
+                matches = by_attack_pid_path.get(
+                    (attack_id, process_label.pid, process_label.path), set()
+                )
                 if not matches:
-                    matches = by_host_pid_path.get((dataset_host, pid, path))
+                    matches = by_host_pid_path.get(
+                        (dataset_host, process_label.pid, process_label.path), set()
+                    )
 
-                if matches:
-                    target_ids.update(matches)
-                elif label_name == "attack":
-                    attack_missing += 1
-                else:
-                    contaminated_missing += 1
+            if matches:
+                target_ids.update(matches)
+            elif process_label.label == "attack":
+                attack_missing += 1
+            else:
+                contaminated_missing += 1
 
         if attack_missing:
             log(
-                f"WARNING: {attack_missing}/{len(process_labels.get('attack', []))} "
+                f"WARNING: {attack_missing}/"
+                f"{sum(label.label == 'attack' for label in process_labels)} "
                 f"ATLASv2 attack processes from '{attack_id}' not found in node tables"
             )
         if contaminated_missing:
             log(
-                f"WARNING: {contaminated_missing}/{len(process_labels.get('contaminated', []))} "
+                f"WARNING: {contaminated_missing}/"
+                f"{sum(label.label == 'contaminated' for label in process_labels)} "
                 f"ATLASv2 contaminated processes from '{attack_id}' not found in node tables"
             )
 

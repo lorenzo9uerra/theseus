@@ -30,6 +30,12 @@ ATLAS_DATA_DIR="${ATLAS_BUNDLE_DIR}/data/ATLASV2"
 THESEUS_CACHE_DIR="${ATLAS_BUNDLE_DIR}/theseus/cache"
 THESEUS_CHECKPOINT_DIR="${ATLAS_BUNDLE_DIR}/theseus/checkpoints"
 PIDS_ARTIFACT_DIR="${ATLAS_BUNDLE_DIR}/pidsmaker/artifacts"
+ATLAS_LABEL_DIR="${ATLAS_LABEL_DIR:-${ATLAS_BUNDLE_DIR}/ground_truth/atlasv2}"
+
+if [ ! -d "${ATLAS_LABEL_DIR}" ]; then
+    ATLAS_LABEL_DIR="${ROOT_DIR}/ground_truth/reapr-ground-truth/atlasv2"
+fi
+export ATLASV2_LABEL_DIR="${ATLAS_LABEL_DIR}"
 
 mkdir -p "${RESULT_DIR}" "${ALLOWLIST_DIR}"
 
@@ -107,7 +113,8 @@ done
 for dataset in "${ATLAS_DATASETS[@]}"; do
     ./.venv/bin/python scripts/allowlist_diagnostic.py "${dataset}" \
         --data-dir "${ATLAS_DATA_DIR}" \
-        --ground-truth-dir "${ROOT_DIR}/ground_truth/reapr-ground-truth/atlasv2" \
+        --ground-truth-dir "${ATLAS_LABEL_DIR}" \
+        --cmd-mode executable \
         --output "${ALLOWLIST_DIR}/${dataset}_allowlist_diagnostic.csv"
 done
 

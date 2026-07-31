@@ -47,8 +47,12 @@ Then, from `baselines/MAGIC/`:
 
 ```bash
 make setup
-make eval
+make eval RESULT_DIR=results_rerun
+uv run python utils/aggregate_results.py --log_dir results_rerun
 ```
+
+Writing to `results_rerun/` forces a fresh evaluation while preserving the
+canonical logs bundled under `results/`.
 
 If the extracted bundle already contains `results/`, you can skip `make eval` and aggregate directly:
 
@@ -153,8 +157,8 @@ uv run python train.py --dataset cadets --seed 71 --device 0
 ### 4. Evaluation
 
 ```bash
-make eval            # all datasets, all seeds
-make eval DEVICE=0   # use GPU 0
+make eval RESULT_DIR=results_rerun           # all datasets, all seeds
+make eval RESULT_DIR=results_rerun DEVICE=0  # use GPU 0
 ```
 
 Or a single run:
@@ -164,7 +168,8 @@ uv run python eval.py --dataset cadets --seed 71 --device 0
 ./.venv/bin/python eval.py --dataset cadets --seed 71 --device 0
 ```
 
-Results are written to `results/<dataset>_seed<seed>.log`.
+With the commands above, results are written to
+`results_rerun/<dataset>_seed<seed>.log`.
 
 ## Expected Output
 

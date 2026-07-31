@@ -504,7 +504,10 @@ def build_graphs(config):
         cache_dir, dataset_name, config
     )
     if cached_graphs and cached_ground_truth:
-        filtered_ground_truth = filter_ground_truth(cached_ground_truth)
+        configured_name = getattr(config.dataset_info, "name", config.dataset)
+        is_atlasv2 = str(configured_name).lower().startswith("atlasv2")
+        ground_truth = get_ground_truth(config) if is_atlasv2 else cached_ground_truth
+        filtered_ground_truth = filter_ground_truth(ground_truth)
         all_malicious_nodes = get_malicious_nodes(filtered_ground_truth)
         log(
             f"Label scope: causal (attack + contaminated): {len(all_malicious_nodes)} malicious nodes"

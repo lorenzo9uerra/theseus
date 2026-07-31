@@ -1,4 +1,5 @@
 import csv
+import glob
 import os.path
 from collections import defaultdict
 from typing import Optional
@@ -18,7 +19,10 @@ def _safe_int(value):
     try:
         if value in (None, ""):
             return None
-        return int(value)
+        string_value = str(value).strip()
+        if string_value.endswith(".0"):
+            string_value = string_value[:-2]
+        return int(string_value)
     except (TypeError, ValueError):
         return None
 
@@ -32,6 +36,13 @@ def _normalize_windows_path(path: str) -> str:
 
 def _is_atlasv2_dataset(cfg) -> bool:
     return str(getattr(cfg.dataset, "name", "")).lower().startswith("atlasv2_")
+
+
+def _normalize_atlas_attack_id(attack_id: str) -> str:
+    attack_id = (attack_id or "").strip().lower()
+    if attack_id and not attack_id.startswith("atlasv2/"):
+        attack_id = f"atlasv2/{attack_id}"
+    return attack_id
 
 
 def _infer_atlas_host_from_dataset_name(dataset_name: str) -> Optional[str]:
@@ -54,8 +65,14 @@ def parse_atlasv2_ground_truth(cfg):
         return None, None, None, None, None, None, None
 
     gt_file = os.path.join(cfg._ground_truth_dir, reapr_gt_path)
-    if not os.path.exists(gt_file):
-        log(f"ATLASv2 ground truth file not found: {gt_file}")
+    label_dir = os.environ.get("ATLASV2_LABEL_DIR", os.path.dirname(gt_file))
+    legacy_file = os.path.join(label_dir, "atlasv2_labels.csv")
+    revised_files = sorted(glob.glob(os.path.join(label_dir, "*.labels")))
+    label_files = revised_files or (
+        [legacy_file] if os.path.exists(legacy_file) else []
+    )
+    if not label_files:
+        log(f"ATLASv2 ground truth not found under: {label_dir}")
         return None, None, None, None, None, None, None
 
     process_df = read_table(
@@ -83,6 +100,7 @@ def parse_atlasv2_ground_truth(cfg):
 
     by_attack_pid_path = defaultdict(set)
     by_host_pid_path = defaultdict(set)
+    by_process_uuid = defaultdict(set)
     node_id_to_path = {}
 
     for row in process_df.iter_rows(named=True):
@@ -95,63 +113,81 @@ def parse_atlasv2_ground_truth(cfg):
         if node_uuid and node_id is not None:
             uuid_to_node_id[node_uuid] = str(node_id)
 
-        if node_id is None or pid is None or not path:
+        if node_id is None:
             continue
 
         node_id = int(node_id)
         node_id_to_path[node_id] = row.get("path", "")
+        process_uuid = node_uuid.split("|")[-1].strip().lower()
+        if process_uuid:
+            by_process_uuid[process_uuid].add(node_id)
 
-        if attack_id:
+        if attack_id and pid is not None and path:
             by_attack_pid_path[(attack_id, pid, path)].add(node_id)
-        by_host_pid_path[(dataset_host, pid, path)].add(node_id)
+        if pid is not None and path:
+            by_host_pid_path[(dataset_host, pid, path)].add(node_id)
 
     unmatched_rows = 0
-    with open(gt_file, "r") as f:
-        reader = csv.DictReader(f)
-        for raw_row in reader:
-            if not raw_row:
-                continue
+    for label_file in label_files:
+        with open(label_file, "r") as f:
+            reader = csv.DictReader(f, skipinitialspace=True)
+            for raw_row in reader:
+                if not raw_row:
+                    continue
 
-            row = {
-                (key or "").strip().lower(): (value or "").strip() for key, value in raw_row.items()
-            }
-            attack_id = row.get("attack", "")
-            label = row.get("label", "").lower()
-            pid = _safe_int(row.get("process_id"))
-            path = _normalize_windows_path(row.get("process_name", ""))
+                row = {
+                    (key or "").strip().lower(): (value or "").strip()
+                    for key, value in raw_row.items()
+                }
+                attack_id = _normalize_atlas_attack_id(row.get("attack", ""))
+                label = row.get("label", "").lower()
+                process_uuid = (row.get("process_uuid", "") or "").strip().lower()
+                pid = _safe_int(row.get("process_id"))
+                path = _normalize_windows_path(row.get("process_name", ""))
 
-            if not attack_id.startswith(f"atlasv2/{dataset_host}-"):
-                continue
-            if label not in {"attack", "contaminated"} or pid is None or not path:
-                continue
+                if not attack_id.startswith(f"atlasv2/{dataset_host}-"):
+                    continue
+                if label not in {"attack", "contaminated"}:
+                    continue
 
-            matches = by_attack_pid_path.get((attack_id, pid, path))
-            if not matches:
-                matches = by_host_pid_path.get((dataset_host, pid, path))
-            if not matches:
-                unmatched_rows += 1
-                continue
-
-            attack_chain = attack_chains[attack_id]
-            for node_id in matches:
-                attack_chain["all_nids"].add(node_id)
-                attack_chain["paths"][node_id] = node_id_to_path.get(node_id, "")
-                all_nids.add(node_id)
-                all_paths[node_id] = node_id_to_path.get(node_id, "")
-
-                if label == "attack":
-                    attack_chain["attack_nids"].add(node_id)
-                    all_attack_nids.add(node_id)
+                if process_uuid:
+                    matches = by_process_uuid.get(process_uuid)
+                    if matches and len(matches) > 1:
+                        raise ValueError(
+                            f"ATLASv2 process UUID '{process_uuid}' maps to multiple nodes"
+                        )
+                elif pid is not None and path:
+                    matches = by_attack_pid_path.get((attack_id, pid, path))
+                    if not matches:
+                        matches = by_host_pid_path.get((dataset_host, pid, path))
                 else:
-                    attack_chain["contaminated_nids"].add(node_id)
-                    all_contaminated_nids.add(node_id)
+                    matches = None
+
+                if not matches:
+                    unmatched_rows += 1
+                    continue
+
+                attack_chain = attack_chains[attack_id]
+                for node_id in matches:
+                    attack_chain["all_nids"].add(node_id)
+                    attack_chain["paths"][node_id] = node_id_to_path.get(node_id, "")
+                    all_nids.add(node_id)
+                    all_paths[node_id] = node_id_to_path.get(node_id, "")
+
+                    if label == "attack":
+                        attack_chain["attack_nids"].add(node_id)
+                        all_attack_nids.add(node_id)
+                    else:
+                        attack_chain["contaminated_nids"].add(node_id)
+                        all_contaminated_nids.add(node_id)
 
     log(
         f"ATLASv2 ground truth parsed for {cfg.dataset.name}: "
         f"{len(attack_chains)} attack chains, "
         f"{len(all_attack_nids)} attack nodes, "
         f"{len(all_contaminated_nids)} contaminated nodes, "
-        f"{unmatched_rows} unmatched label rows"
+        f"{unmatched_rows} unmatched label rows; "
+        f"source={'revised UUID labels' if revised_files else 'legacy CSV'}"
     )
 
     return (

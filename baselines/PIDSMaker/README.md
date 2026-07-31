@@ -57,8 +57,12 @@ make setup
 ln -sf ../../data data
 ln -sf ../../ground_truth ground_truth
 
-make eval            # Orthrus + Velox, eval-only (skip training)
+make eval RESULT_DIR=results_rerun  # Orthrus + Velox, eval-only (skip training)
+uv run python scripts/aggregate_results.py --log_dir results_rerun
 ```
+
+Writing to `results_rerun/` forces a fresh evaluation while preserving the
+canonical logs bundled under `results/`.
 
 `make eval` still expects the processed E3 tables to be available at
 `PROJECT_ROOT/data/DARPA/`, because strict-label reconstruction maps REAPr UUIDs back to
@@ -143,9 +147,9 @@ make velox            # All datasets, all seeds
 
 **Re-evaluate only (skip training):**
 ```bash
-make eval            # Orthrus + Velox
-make eval-orthrus
-make eval-velox
+make eval RESULT_DIR=results_rerun            # Orthrus + Velox
+make eval-orthrus RESULT_DIR=results_rerun
+make eval-velox RESULT_DIR=results_rerun
 ```
 
 These evaluation-only targets still require the processed E3 tables at
@@ -166,7 +170,8 @@ uv run python pidsmaker/main.py orthrus CADETS_E3 --tuned --restart_from_scratch
 
 ### 4. Results
 
-Logs are saved to `results/<system>_<dataset>_seed<seed>.log`.
+With the evaluation-only commands above, logs are saved to
+`results_rerun/<system>_<dataset>_seed<seed>.log`.
 
 For paper reproduction, use the **Strict Attack Chain** metrics from each log,
 with contaminated nodes excluded from metric accounting.

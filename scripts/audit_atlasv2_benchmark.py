@@ -23,6 +23,7 @@ from scripts.create_csv_files_atlasv2 import (  # noqa: E402
     _infer_attack_id_from_edr_file,
     _parse_cbc_timestamp_to_ns,
 )
+from utils.ground_truth import load_atlasv2_process_labels  # noqa: E402
 from utils.utils import read_node_table  # noqa: E402
 
 ATLAS_DATASETS = ["atlasv2_h1", "atlasv2_h2"]
@@ -60,6 +61,7 @@ class AtlasLabelRow:
     pid: int
     path: str
     label: str
+    process_uuid: str = ""
 
 
 def _safe_int(value: Any) -> int | None:
@@ -329,9 +331,23 @@ def collect_allowlist_report(
     return report
 
 
-def load_atlas_label_rows(labels_csv: Path) -> list[AtlasLabelRow]:
+def load_atlas_label_rows(labels_source: Path) -> list[AtlasLabelRow]:
+    if labels_source.is_dir():
+        return [
+            AtlasLabelRow(
+                attack_id=label.attack_id,
+                host=_infer_host_from_attack_id(label.attack_id) or "",
+                pid=label.pid if label.pid is not None else -1,
+                path=label.path,
+                label=label.label,
+                process_uuid=label.process_uuid,
+            )
+            for label in load_atlasv2_process_labels(labels_source)
+            if _infer_host_from_attack_id(label.attack_id) is not None
+        ]
+
     rows: list[AtlasLabelRow] = []
-    with labels_csv.open(newline="") as file:
+    with labels_source.open(newline="") as file:
         reader = csv.DictReader(file, skipinitialspace=True)
         for raw_row in reader:
             if not raw_row:
@@ -341,18 +357,28 @@ def load_atlas_label_rows(labels_csv: Path) -> list[AtlasLabelRow]:
                 (key or "").strip().lower(): (value or "").strip()
                 for key, value in raw_row.items()
             }
-            attack_id = row.get("attack", "")
+            attack_id = row.get("attack", "").lower()
+            if attack_id and not attack_id.startswith("atlasv2/"):
+                attack_id = f"atlasv2/{attack_id}"
             host = _infer_host_from_attack_id(attack_id)
             label = row.get("label", "").lower()
             pid = _safe_int(row.get("process_id"))
             path = _normalize_windows_path(row.get("process_name", ""))
+            process_uuid = row.get("process_uuid", "").lower()
 
-            if not attack_id or host is None or label == "" or pid is None or not path:
+            if not attack_id or host is None or label == "":
+                continue
+            if not process_uuid and (pid is None or not path):
                 continue
 
             rows.append(
                 AtlasLabelRow(
-                    attack_id=attack_id, host=host, pid=pid, path=path, label=label
+                    attack_id=attack_id,
+                    host=host,
+                    pid=pid if pid is not None else -1,
+                    path=path,
+                    label=label,
+                    process_uuid=process_uuid,
                 )
             )
 
@@ -365,9 +391,10 @@ def collect_label_inventory(label_rows: list[AtlasLabelRow]) -> dict[str, Any]:
         host_rows = [row for row in label_rows if row.host == host]
         raw_counts = Counter(row.label for row in host_rows)
         unique_rows = {
-            (row.attack_id, row.pid, row.path, row.label) for row in host_rows
+            (row.attack_id, row.process_uuid, row.pid, row.path, row.label)
+            for row in host_rows
         }
-        unique_label_counts = Counter(label for _, _, _, label in unique_rows)
+        unique_label_counts = Counter(label for _, _, _, _, label in unique_rows)
         per_host[host] = {
             "raw_rows": len(host_rows),
             "unique_rows": len(unique_rows),
@@ -386,7 +413,11 @@ def collect_label_inventory(label_rows: list[AtlasLabelRow]) -> dict[str, Any]:
 
 def _build_process_lookup(
     dataset_dir: Path,
-) -> tuple[dict[tuple[str, int, str], set[int]], dict[tuple[str, int, str], set[int]]]:
+) -> tuple[
+    dict[str, set[int]],
+    dict[tuple[str, int, str], set[int]],
+    dict[tuple[str, int, str], set[int]],
+]:
     process_df = read_node_table(
         str(dataset_dir),
         "process_node_table",
@@ -395,6 +426,7 @@ def _build_process_lookup(
     if process_df is None:
         raise ValueError(f"process_node_table not found under {dataset_dir}")
 
+    by_process_uuid: dict[str, set[int]] = defaultdict(set)
     by_attack_pid_path: dict[tuple[str, int, str], set[int]] = defaultdict(set)
     by_host_pid_path: dict[tuple[str, int, str], set[int]] = defaultdict(set)
 
@@ -407,25 +439,38 @@ def _build_process_lookup(
         device_name = node_uuid.split("|", 1)[0] if "|" in node_uuid else ""
         host = _infer_host_from_device_name(device_name)
 
-        if index_id is None or pid is None or path == "":
+        if index_id is None:
             continue
 
-        if attack_id:
+        process_uuid = node_uuid.split("|")[-1].strip().lower()
+        if process_uuid:
+            by_process_uuid[process_uuid].add(index_id)
+        if attack_id and pid is not None and path:
             by_attack_pid_path[(attack_id, pid, path)].add(index_id)
-        if host:
+        if host and pid is not None and path:
             by_host_pid_path[(host, pid, path)].add(index_id)
 
-    return by_attack_pid_path, by_host_pid_path
+    return by_process_uuid, by_attack_pid_path, by_host_pid_path
 
 
 def _classify_label_match(
+    process_uuid: str,
     attack_id: str,
     host: str,
     pid: int,
     path: str,
     by_attack_pid_path: dict[tuple[str, int, str], set[int]],
     by_host_pid_path: dict[tuple[str, int, str], set[int]],
+    by_process_uuid: dict[str, set[int]],
 ) -> tuple[str, set[int]]:
+    if process_uuid:
+        uuid_matches = by_process_uuid.get(process_uuid, set())
+        if uuid_matches:
+            if len(uuid_matches) == 1:
+                return "uuid_unique", uuid_matches
+            return "uuid_ambiguous", uuid_matches
+        return "unmatched", set()
+
     exact_matches = by_attack_pid_path.get((attack_id, pid, path), set())
     if exact_matches:
         if len(exact_matches) == 1:
@@ -441,6 +486,21 @@ def _classify_label_match(
     return "unmatched", set()
 
 
+MATCH_CATEGORIES = (
+    "uuid_unique",
+    "uuid_ambiguous",
+    "exact_unique",
+    "exact_ambiguous",
+    "host_fallback_unique",
+    "host_fallback_ambiguous",
+    "unmatched",
+)
+
+
+def _format_match_counts(counts: Counter) -> dict[str, int]:
+    return {category: counts.get(category, 0) for category in MATCH_CATEGORIES}
+
+
 def collect_label_alignment_report(
     atlas_root: Path, atlas_datasets: list[str], label_rows: list[AtlasLabelRow]
 ) -> dict[str, Any]:
@@ -452,7 +512,9 @@ def collect_label_alignment_report(
         if dataset_host is None or not dataset_dir.exists():
             continue
 
-        by_attack_pid_path, by_host_pid_path = _build_process_lookup(dataset_dir)
+        by_process_uuid, by_attack_pid_path, by_host_pid_path = _build_process_lookup(
+            dataset_dir
+        )
         host_rows = [row for row in label_rows if row.host == dataset_host]
         attack_rows = [row for row in host_rows if row.label == "attack"]
         contaminated_rows = [row for row in host_rows if row.label == "contaminated"]
@@ -461,24 +523,34 @@ def collect_label_alignment_report(
         raw_node_ids: set[int] = set()
         for row in attack_rows:
             category, node_ids = _classify_label_match(
+                row.process_uuid,
                 row.attack_id,
                 row.host,
                 row.pid,
                 row.path,
                 by_attack_pid_path,
                 by_host_pid_path,
+                by_process_uuid,
             )
             raw_categories[category] += 1
             raw_node_ids.update(node_ids)
 
         unique_attack_rows = {
-            (row.attack_id, row.host, row.pid, row.path) for row in attack_rows
+            (row.process_uuid, row.attack_id, row.host, row.pid, row.path)
+            for row in attack_rows
         }
         unique_categories = Counter()
         unique_node_ids: set[int] = set()
-        for attack_id, host, pid, path in sorted(unique_attack_rows):
+        for process_uuid, attack_id, host, pid, path in sorted(unique_attack_rows):
             category, node_ids = _classify_label_match(
-                attack_id, host, pid, path, by_attack_pid_path, by_host_pid_path
+                process_uuid,
+                attack_id,
+                host,
+                pid,
+                path,
+                by_attack_pid_path,
+                by_host_pid_path,
+                by_process_uuid,
             )
             unique_categories[category] += 1
             unique_node_ids.update(node_ids)
@@ -487,12 +559,14 @@ def collect_label_alignment_report(
         contaminated_node_ids: set[int] = set()
         for row in contaminated_rows:
             category, node_ids = _classify_label_match(
+                row.process_uuid,
                 row.attack_id,
                 row.host,
                 row.pid,
                 row.path,
                 by_attack_pid_path,
                 by_host_pid_path,
+                by_process_uuid,
             )
             contaminated_categories[category] += 1
             contaminated_node_ids.update(node_ids)
@@ -502,38 +576,10 @@ def collect_label_alignment_report(
             "unique_attack_rows": len(unique_attack_rows),
             "duplicate_attack_rows": len(attack_rows) - len(unique_attack_rows),
             "raw_contaminated_rows": len(contaminated_rows),
-            "contaminated_match_counts": {
-                "exact_unique": contaminated_categories.get("exact_unique", 0),
-                "exact_ambiguous": contaminated_categories.get("exact_ambiguous", 0),
-                "host_fallback_unique": contaminated_categories.get(
-                    "host_fallback_unique", 0
-                ),
-                "host_fallback_ambiguous": contaminated_categories.get(
-                    "host_fallback_ambiguous", 0
-                ),
-                "unmatched": contaminated_categories.get("unmatched", 0),
-            },
+            "contaminated_match_counts": _format_match_counts(contaminated_categories),
             "matched_node_ids_from_contaminated_rows": len(contaminated_node_ids),
-            "raw_match_counts": {
-                "exact_unique": raw_categories.get("exact_unique", 0),
-                "exact_ambiguous": raw_categories.get("exact_ambiguous", 0),
-                "host_fallback_unique": raw_categories.get("host_fallback_unique", 0),
-                "host_fallback_ambiguous": raw_categories.get(
-                    "host_fallback_ambiguous", 0
-                ),
-                "unmatched": raw_categories.get("unmatched", 0),
-            },
-            "unique_match_counts": {
-                "exact_unique": unique_categories.get("exact_unique", 0),
-                "exact_ambiguous": unique_categories.get("exact_ambiguous", 0),
-                "host_fallback_unique": unique_categories.get(
-                    "host_fallback_unique", 0
-                ),
-                "host_fallback_ambiguous": unique_categories.get(
-                    "host_fallback_ambiguous", 0
-                ),
-                "unmatched": unique_categories.get("unmatched", 0),
-            },
+            "raw_match_counts": _format_match_counts(raw_categories),
+            "unique_match_counts": _format_match_counts(unique_categories),
             "matched_node_ids_from_raw_attack_rows": len(raw_node_ids),
             "matched_node_ids_from_unique_attack_rows": len(unique_node_ids),
         }
@@ -949,12 +995,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--atlas_labels",
         type=Path,
-        default=PROJECT_ROOT
-        / "ground_truth"
-        / "reapr-ground-truth"
-        / "atlasv2"
-        / "atlasv2_labels.csv",
-        help="ATLASv2 REAPr-style process-label CSV.",
+        default=PROJECT_ROOT / "ground_truth" / "reapr-ground-truth" / "atlasv2",
+        help="Directory containing revised ATLASv2 labels or the legacy label CSV.",
     )
     parser.add_argument(
         "--atlas_config",

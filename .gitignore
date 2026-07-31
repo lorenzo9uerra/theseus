@@ -10,6 +10,7 @@ slurm/
 docs/
 outputs/
 results/
+results_rerun/
 
 # Baseline specific
 /baselines/MAGIC/data/*/

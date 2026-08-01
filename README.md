@@ -100,13 +100,13 @@ For the Theseus rows, ensure you have extracted the `cache` and `checkpoints`
 folders as described above, then run:
 
 ```bash
-./scripts/reproduce_results.sh
-uv run python scripts/aggregate_results.py
+RESULT_DIR=results_rerun ./scripts/reproduce_results.sh
+uv run python scripts/aggregate_results.py --log_dir results_rerun
 ```
 
-Logs are written to `results/theseus_<dataset>_seed<seed>.log`. The release
-bundles ship sanitized copies of these logs, with host-specific paths and
-wall-clock timestamps removed.
+Fresh logs are written to
+`results_rerun/theseus_<dataset>_seed<seed>.log`, preserving the canonical
+sanitized logs under `results/`.
 
 For the allowlist row, regenerate and aggregate the deterministic diagnostic:
 
@@ -150,6 +150,8 @@ To reconstruct the exact paper table from the packaged canonical results:
 To rerun the ATLASv2 secondary results end to end:
 
 ```bash
+RESULT_DIR=results_rerun/atlas \
+ALLOWLIST_DIR=outputs/atlas_ae \
 ./scripts/reproduce_atlasv2_results.sh
 ```
 
@@ -159,8 +161,8 @@ This script:
 * re-runs `Velox` in eval-only mode from the staged `PIDSMaker` artifacts
 * regenerates the deterministic allowlist diagnostic CSVs
 * aggregates everything into:
-  * `outputs/atlasv2_secondary_benchmark_summary.json`
-  * `outputs/atlasv2_secondary_benchmark_summary.md`
+  * `outputs/atlas_ae/atlasv2_secondary_benchmark_summary.json`
+  * `outputs/atlas_ae/atlasv2_secondary_benchmark_summary.md`
 
 ### 1.2 Runtime Profile
 

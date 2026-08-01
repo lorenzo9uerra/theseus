@@ -109,6 +109,11 @@ class DatasetStats:
             return 0.0
         return weighted_sum / total_filled
 
+    @property
+    def semantic_signal_quality(self) -> float:
+        """Feature completeness as a fraction multiplied by field entropy."""
+        return (self.overall_completeness / 100) * self.overall_entropy
+
 
 def corpus_token_entropy(token_counts: Counter) -> float:
     """Compute Shannon entropy over corpus-level token frequencies."""
@@ -357,16 +362,21 @@ def print_summary(results: list[DatasetStats]):
     print("\n" + "=" * 90)
     print("DATASET SEMANTIC SIGNAL QUALITY INPUTS")
     print("=" * 90)
-    print(f"{'Dataset':<20} {'Nodes':>12} {'Completeness':>16} {'Entropy':>16}")
+    print(
+        f"{'Dataset':<20} {'Nodes':>12} {'Completeness':>16} "
+        f"{'Entropy':>16} {'Quality':>12}"
+    )
     print("-" * 90)
     for r in results:
         print(
             f"{r.dataset:<20} {r.total_nodes:>12,} "
-            f"{r.overall_completeness:>15.1f}% {r.overall_entropy:>14.2f} bits"
+            f"{r.overall_completeness:>15.1f}% {r.overall_entropy:>14.2f} bits "
+            f"{r.semantic_signal_quality:>12.2f}"
         )
     print("=" * 90)
     print("\nCompleteness = filled_slots / possible_slots")
     print("Entropy = sum(H_field * filled_count) / sum(filled_count)")
+    print("Quality = (Completeness / 100) * Entropy")
 
     print("\n" + "=" * 90)
     print("COMPLETENESS BY NODE TYPE")

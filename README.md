@@ -26,7 +26,7 @@ Download the following archives from Zenodo:
 
 * **Reproducibility artifacts:** Cache files, model checkpoints, retained baseline artifacts, and sanitized evaluation logs for the reported results.
     * URL: [https://doi.org/10.5281/zenodo.21427594](https://doi.org/10.5281/zenodo.21427594)
-    * Files: `theseus_artifacts.tar.gz`, `magic_artifacts.tar.gz`, `pidsmaker_artifacts.tar.gz`, `atlasv2_artifacts.tar.gz`
+    * Files: `theseus-source.tar.gz`, `theseus_artifacts.tar.gz`, `magic_artifacts.tar.gz`, `pidsmaker_artifacts.tar.gz`, `atlasv2_artifacts.tar.gz`
 
 ### 2. Extract and Configure
 
@@ -229,6 +229,8 @@ Reproduction instructions for the baseline systems are provided in their respect
 * **Orthrus and Velox:** See [baselines/PIDSMaker/](baselines/PIDSMaker/)
 
 Both baselines use separate `uv` environments and provide Makefiles for evaluation and retraining.
+Magic evaluation can run on CPU. PIDSMaker evaluation requires a 128 GB RAM
+allocation and one CUDA-capable GPU on the larger E3 datasets.
 
 After extracting `magic_artifacts.tar.gz` / `pidsmaker_artifacts.tar.gz`, these
 commands reproduce the Magic row and the Orthrus/Velox rows of the E3 main

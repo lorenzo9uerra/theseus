@@ -22,7 +22,7 @@ Reported metrics are AP, AUROC, precision, F1, MCC, ADP, and FPR.
 
 ```
 PROJECT_ROOT/
-├── data/DARPA/                        # Raw DARPA TC E3 data (CSV/Parquet)
+├── data/DARPA/                        # Processed E3 node/event tables
 │   ├── CADETS_E3/
 │   ├── FIVEDIRECTIONS_E3/
 │   ├── THEIA_E3/

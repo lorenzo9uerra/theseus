@@ -13,11 +13,13 @@ docker build -f containers/theseus.Dockerfile -t theseus:latest .
 Run the main Theseus E3 paper evaluation with mounted artifacts:
 
 ```bash
+mkdir -p results_rerun
 docker run --rm -it --gpus all \
   -v "$PWD/data:/opt/theseus/data" \
   -v "$PWD/cache:/opt/theseus/cache" \
   -v "$PWD/checkpoints:/opt/theseus/checkpoints" \
-  -v "$PWD/results:/opt/theseus/results" \
+  -v "$PWD/results_rerun:/opt/theseus/results_rerun" \
+  -e RESULT_DIR=results_rerun \
   theseus:latest \
   bash -lc './scripts/reproduce_results.sh'
 ```

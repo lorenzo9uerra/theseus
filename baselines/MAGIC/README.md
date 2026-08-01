@@ -1,6 +1,7 @@
 # Magic Baseline Implementation
 
-This fork reproduces the Magic baseline on the DARPA TC Engagement 3 datasets.
+This fork adapts [MAGIC](https://github.com/FDUDSDE/MAGIC) at commit `aa0b647`
+for the shared DARPA TC Engagement 3 evaluation protocol.
 
 ## Prerequisites
 

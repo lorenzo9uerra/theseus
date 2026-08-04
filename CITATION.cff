@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper listed under preferred-citation."
+title: "Theseus"
+type: software
+version: "0.1.0"
+date-released: "2026-08-01"
+license: Apache-2.0
+repository-code: "https://github.com/lorenzo9uerra/theseus"
+authors:
+  - family-names: Guerra
+    given-names: Lorenzo
+  - family-names: Chapuis
+    given-names: Thomas
+  - family-names: Duc
+    given-names: Guillaume
+  - family-names: Mozharovskyi
+    given-names: Pavlo
+  - family-names: Nguyen
+    given-names: Van-Tam
+preferred-citation:
+  type: conference-paper
+  title: "How Benchmarks and Evaluation Protocols Shape Conclusions in Provenance-Based Intrusion Detection"
+  authors:
+    - family-names: Guerra
+      given-names: Lorenzo
+    - family-names: Chapuis
+      given-names: Thomas
+    - family-names: Duc
+      given-names: Guillaume
+    - family-names: Mozharovskyi
+      given-names: Pavlo
+    - family-names: Nguyen
+      given-names: Van-Tam
+  collection-title: "34th Annual Network and Distributed System Security Symposium (NDSS)"
+  year: 2027
+  url: "https://arxiv.org/abs/2608.01454"

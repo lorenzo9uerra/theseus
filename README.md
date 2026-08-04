@@ -1,6 +1,21 @@
 # Theseus
 
-This repository provides the official code for the paper "How Benchmarks and Evaluation Protocols Shape Conclusions in Provenance-Based Intrusion Detection".
+This repository provides the official code for the paper ["How Benchmarks and Evaluation Protocols Shape Conclusions in Provenance-Based Intrusion Detection"](https://arxiv.org/abs/2608.01454), accepted at the 34th Annual Network and Distributed System Security Symposium (NDSS 2027).
+
+## Citation
+
+The accepted manuscript is available on [arXiv](https://arxiv.org/abs/2608.01454).
+
+```bibtex
+@inproceedings{guerra2027benchmarks,
+  title = {{How Benchmarks and Evaluation Protocols Shape Conclusions in Provenance-Based Intrusion Detection}},
+  author = {Guerra, Lorenzo and Chapuis, Thomas and Duc, Guillaume and Mozharovskyi, Pavlo and Nguyen, Van-Tam},
+  booktitle = {34th Annual Network and Distributed System Security Symposium (NDSS)},
+  year = {2027},
+  note = {To appear},
+  url = {https://arxiv.org/abs/2608.01454}
+}
+```
 
 ## Installation
 

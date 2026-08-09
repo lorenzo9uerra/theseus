@@ -243,9 +243,12 @@ Reproduction instructions for the baseline systems are provided in their respect
 * **Magic:** See [baselines/MAGIC/](baselines/MAGIC/)
 * **Orthrus and Velox:** See [baselines/PIDSMaker/](baselines/PIDSMaker/)
 
-Both baselines use separate `uv` environments and provide Makefiles for evaluation and retraining.
-Magic evaluation can run on CPU. PIDSMaker evaluation requires a 128 GB RAM
-allocation and one CUDA-capable GPU on the larger E3 datasets.
+Both baselines use separate `uv` environments and provide Makefiles for
+evaluation and retraining.  Magic evaluation can run on CPU. PIDSMaker
+evaluation requires a 128 GB RAM allocation and one CUDA-capable GPU on the
+larger E3 datasets. The complete artifact setup also requires at least 300 GB
+of local storage. Network storage may substantially increase PIDSMaker setup
+and I/O time because its retained artifacts contain many small files.
 
 After extracting `magic_artifacts.tar.gz` / `pidsmaker_artifacts.tar.gz`, these
 commands reproduce the Magic row and the Orthrus/Velox rows of the E3 main

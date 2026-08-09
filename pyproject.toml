@@ -80,4 +80,5 @@ skip-magic-trailing-comma = true
 line-ending = "auto"
 
 [tool.ruff.lint.isort]
+known-third-party = ["wandb"]
 split-on-trailing-comma=false

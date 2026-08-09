@@ -2,9 +2,9 @@ import os
 
 import psutil
 import torch
+import wandb
 from torch_geometric.loader import DataLoader
 
-import wandb
 from models.theseus import Theseus
 from tasks.evaluate import validate
 from utils.utils import log, log_tqdm, timed_execution

@@ -65,7 +65,7 @@ worker nodes, create the environment once with `make setup`, then invoke the int
 directly from the built virtual environment:
 
 ```bash
-./.venv/bin/python eval.py --dataset cadets --seed 71 --device 0
+./.venv/bin/python eval.py --dataset cadets --seed 71
 ./.venv/bin/python utils/aggregate_results.py
 ```
 
@@ -153,6 +153,9 @@ uv run python train.py --dataset cadets --seed 71 --device 0
 
 ### 4. Evaluation
 
+Evaluation defaults to CPU (`DEVICE=-1`), matching the original MAGIC
+implementation. Set `DEVICE` explicitly only to use a compatible GPU.
+
 ```bash
 make eval RESULT_DIR=results_rerun           # all datasets, all seeds
 make eval RESULT_DIR=results_rerun DEVICE=0  # use GPU 0
@@ -160,9 +163,9 @@ make eval RESULT_DIR=results_rerun DEVICE=0  # use GPU 0
 
 Or a single run:
 ```bash
-uv run python eval.py --dataset cadets --seed 71 --device 0
+uv run python eval.py --dataset cadets --seed 71
 # or, if uv is not on PATH on the execution node:
-./.venv/bin/python eval.py --dataset cadets --seed 71 --device 0
+./.venv/bin/python eval.py --dataset cadets --seed 71
 ```
 
 With the commands above, results are written to
@@ -174,6 +177,10 @@ For paper reproduction, use the **strict attack-chain** metrics reported in each
 evaluation log, where contaminated nodes are excluded from metric accounting.
 
 Key metrics: F1, AP, AUROC, FPR, MCC, ADP (Attack Detection Precision).
+
+ADP is rank-based and can be sensitive to tied or nearly tied anomaly scores.
+On Cadets, ADP varied across CPU environments while AP, AUROC, and the
+operating-point metrics were unchanged.
 
 ## Aggregating Results
 
